@@ -9,17 +9,9 @@ package de.tammon.dev.sip.packets;
 import de.tammon.dev.sip.packets.parts.ConnectResponseBody;
 import de.tammon.dev.sip.packets.parts.Head;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class ConnectResponse extends AbstractResponsePacket implements DynamicPacket {
-
-    @Override
-    public void setData(byte[] read) throws Exception {
-        System.out.println(read.length);
-        this.head = new Head(ByteBuffer.wrap(Arrays.copyOfRange(read, 0, 8)).array());
-        this.body = new ConnectResponseBody(ByteBuffer.wrap(Arrays.copyOfRange(read, 8, read.length -1)).array());
-    }
 
     @Override
     public ConnectResponseBody getPacketBody() {
@@ -29,5 +21,11 @@ public class ConnectResponse extends AbstractResponsePacket implements DynamicPa
     @Override
     public int getMessageType() {
         return ConnectResponseBody.getMessageType();
+    }
+
+    @Override
+    public void setData(byte[] read) throws Exception {
+        this.head = new Head(Arrays.copyOfRange(read, 0, 8));
+        this.body = new ConnectResponseBody(Arrays.copyOfRange(read, 8, read.length -1));
     }
 }
