@@ -8,7 +8,6 @@ package de.tammon.dev.sip.packets.parts;
 
 import de.tammon.dev.sip.packets.SipByteUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
@@ -27,20 +26,18 @@ public class ConnectResponseBody extends AbstractBody implements ResponseBody {
     }
 
     public ConnectResponseBody(byte[]... rawBodyData) throws IllegalArgumentException, IOException {
-        byte[] rawByteData = SipByteUtils.concatenate(rawBodyData);
-        if (rawBodyData == null) throw new IllegalArgumentException("Data of TCP response Body must not be null!");
 
-        DataInputStream rawData = new DataInputStream(new ByteArrayInputStream(rawByteData));
+        DataInputStream data = SipByteUtils.getDataInputStreamOfRawData(rawBodyData);
 
-        this.sipVersion = SipByteUtils.getSipPrimitive(rawData.readInt());
-        this.busyTimeout = SipByteUtils.getSipPrimitive(rawData.readInt());
-        this.leaseTimeout = SipByteUtils.getSipPrimitive(rawData.readInt());
-        this.noSupportedMessageTypes = SipByteUtils.getSipPrimitive(rawData.readInt());
+        this.sipVersion = SipByteUtils.getSipPrimitive(data.readInt());
+        this.busyTimeout = SipByteUtils.getSipPrimitive(data.readInt());
+        this.leaseTimeout = SipByteUtils.getSipPrimitive(data.readInt());
+        this.noSupportedMessageTypes = SipByteUtils.getSipPrimitive(data.readInt());
         this.supportedMessageTypes = new int[noSupportedMessageTypes];
         //todo: optimize messageTypeMapping
         for (int i = 0; i < noSupportedMessageTypes; i++){
             try {
-                this.supportedMessageTypes[i] = SipByteUtils.getSipPrimitive(rawData.readInt());
+                this.supportedMessageTypes[i] = SipByteUtils.getSipPrimitive(data.readInt());
             } catch (IOException e) {
                 e.printStackTrace();
             }

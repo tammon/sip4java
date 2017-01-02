@@ -8,7 +8,6 @@ package de.tammon.dev.sip.packets.parts;
 
 import de.tammon.dev.sip.packets.SipByteUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
@@ -22,11 +21,10 @@ public class Head extends AbstractPart {
     }
 
     public Head(byte[]... rawHeadData) throws IOException {
-        byte[] rawData = SipByteUtils.concatenate(rawHeadData);
-        DataInputStream rawDataStream = new DataInputStream(new ByteArrayInputStream(rawData));
+        DataInputStream data = SipByteUtils.getDataInputStreamOfRawData(rawHeadData);
 
-        this.transactionId = SipByteUtils.getSipPrimitive(rawDataStream.readInt());
-        this.messageType = SipByteUtils.getSipPrimitive(rawDataStream.readInt());
+        this.transactionId = SipByteUtils.getSipPrimitive(data.readInt());
+        this.messageType = SipByteUtils.getSipPrimitive(data.readInt());
     }
 
     public int getTransactionId() {
