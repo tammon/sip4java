@@ -15,14 +15,18 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.net.*;
+import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class TCPConnection implements SipConnection {
     private InetAddress ipAddress;
     private int maxDelay, leaseTimeout, busyTimeout, sipPort, sipVersion;
     private int transactionId = 0;
     private boolean connected = false;
-    private int[] supportedMessages;
+    private List<Integer> supportedMessages;
     private Socket socketConnection;
     private DataOutputStream dataOutputStream;
     private DataInputStream dataInputStream;
@@ -63,6 +67,7 @@ public class TCPConnection implements SipConnection {
             this.socketConnection.connect(new InetSocketAddress(this.ipAddress, this.sipPort), leaseTimeout);
             this.dataOutputStream = new DataOutputStream(this.socketConnection.getOutputStream());
             this.dataInputStream = new DataInputStream(this.socketConnection.getInputStream());
+            this.supportedMessages = null;
         } catch (SocketTimeoutException e) {
             throw new SocketTimeoutException("Drive does not respond to socket request. Probably wrong IP or not on network...");
         }
@@ -73,7 +78,10 @@ public class TCPConnection implements SipConnection {
     }
 
     private synchronized Response tcpSendAndReceive(Request request, Response response) throws Exception {
-        this.dataOutputStream.write(request.getTcpMsgAsByteArray());
+
+        if (!Objects.isNull(this.supportedMessages) && !this.supportedMessages.contains(request.getPacketHead().getMessageType()))
+            throw new UnknownServiceException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages"); //todo:special Exception for not supported services
+        else this.dataOutputStream.write(request.getTcpMsgAsByteArray());
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -114,7 +122,7 @@ public class TCPConnection implements SipConnection {
     private void connectSip() throws Exception {
         Connect request = new Connect(this.getNewTransactionId(), this.sipVersion, this.busyTimeout, this.leaseTimeout);
         ConnectResponse response = (ConnectResponse) this.tcpSendAndReceive(request, new ConnectResponse());
-        this.supportedMessages = response.getPacketBody().getSupportedMessageTypes();
+        this.supportedMessages = IntStream.of(response.getPacketBody().getSupportedMessageTypes()).boxed().collect(Collectors.toList());
         this.connected = true;
     }
 
@@ -135,7 +143,7 @@ public class TCPConnection implements SipConnection {
         return connected && this.socketConnection.isConnected();
     }
 
-    public int[] getSupportedMessages() {
+    public List<Integer> getSupportedMessages() {
         return supportedMessages;
     }
 
