@@ -6,10 +6,7 @@
 
 package de.tammon.dev.sip;
 
-import de.tammon.dev.sip.packets.Connect;
-import de.tammon.dev.sip.packets.ConnectResponse;
-import de.tammon.dev.sip.packets.Request;
-import de.tammon.dev.sip.packets.Response;
+import de.tammon.dev.sip.packets.*;
 import de.tammon.dev.sip.packets.parts.Head;
 
 import java.io.ByteArrayOutputStream;
@@ -66,6 +63,8 @@ public class TCPConnection implements SipConnection {
         this.dataOutputStream.write(request.getTcpMsgAsByteArray());
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        // todo: this read construct will probably run into an timeout if the message is 1024 byte long
         byte[] buffer = new byte[1024];
         while (true) {
             int readLength = dataInputStream.read(buffer);
@@ -76,10 +75,20 @@ public class TCPConnection implements SipConnection {
         byte[] rawResponse = outputStream.toByteArray();
         Head header = new Head(rawResponse);
 
-        if (header.getTransactionId() != request.getTransactionId()) throw new Exception("The response transaction ID doesn't match the request transaction ID");
+        // Check if we got the right response to our request
+        if (header.getTransactionId() != request.getTransactionId()) throw new Exception("The response transaction ID "
+                + header.getTransactionId()
+                + " doesn't match the request transaction ID "
+                + request.getTransactionId());
 
-        // Check if we got an ExceptionResponse todo: map to exceptionResponse
-        if (header.getMessageType() == 67) throw new Exception("Drive threw Communication Exception");
+        // Check if Drive threw an communication exception
+        if (header.getMessageType() == 67) {
+            ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
+            throw new Exception("Drive threw Communication Exception. SIP-CommonErrorCode: "
+                    + exceptionResponse.getPacketBody().getCommonErrorCode()
+                    + "SIP-SpecificErrorCode: "
+                    + exceptionResponse.getPacketBody().getSpecificErrorCode());
+        }
         else if (header.getMessageType() == response.getMessageType()){
             response.setData(rawResponse);
             return response;
