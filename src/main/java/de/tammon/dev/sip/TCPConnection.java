@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.Properties;
 
 public class TCPConnection implements SipConnection {
@@ -91,7 +90,6 @@ public class TCPConnection implements SipConnection {
         Connect request = new Connect(this.getNewTransactionId(), this.sipVersion, this.busyTimeout, this.leaseTimeout);
         ConnectResponse response = (ConnectResponse) this.tcpSendAndReceive(request, new ConnectResponse());
         this.supportedMessages = response.getPacketBody().getSupportedMessageTypes();
-        Arrays.stream(this.getSupportedMessages()).forEach(System.out::println);
         this.connected = true;
     }
 
