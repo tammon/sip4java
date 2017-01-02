@@ -11,14 +11,15 @@ import de.tammon.dev.sip.packets.SipByteUtils;
 import java.io.DataInputStream;
 
 public class ExceptionBody extends AbstractBody implements ResponseBody {
-    final static int messageType = 67;
-    short commonErrorCode;
-    int specificErrorCode;
-
+    private final static int messageType = 67;
+    private short rawCommonErrorCode;
+    private int specificErrorCode;
+    private commonErrorCodes commonErrorCode;
     public ExceptionBody(byte[]... rawBodyDataArrays) throws Exception {
         DataInputStream data = SipByteUtils.getDataInputStreamOfRawData(rawBodyDataArrays);
-        this.commonErrorCode = SipByteUtils.getSipPrimitive(data.readShort());
+        this.rawCommonErrorCode = SipByteUtils.getSipPrimitive(data.readShort());
         this.specificErrorCode = SipByteUtils.getSipPrimitive(data.readInt());
+        this.commonErrorCode = commonErrorCodes.values()[this.rawCommonErrorCode-1];
     }
 
     public static int getMessageType() {
@@ -28,15 +29,19 @@ public class ExceptionBody extends AbstractBody implements ResponseBody {
     @Override
     public byte[] getDataAsByteArray() {
         return SipByteUtils.concatenate(
-                SipByteUtils.getByteArray(this.commonErrorCode),
+                SipByteUtils.getByteArray(this.rawCommonErrorCode),
                 SipByteUtils.getByteArray(this.specificErrorCode));
     }
 
-    public short getCommonErrorCode() {
+    public commonErrorCodes getCommonErrorCode() {
         return commonErrorCode;
     }
 
     public int getSpecificErrorCode() {
         return specificErrorCode;
+    }
+
+    public enum commonErrorCodes {
+        CONNECTION_ERROR, TIMEOUT, UNKNOWN_MESSAGE_TYPE, SERVICESPECIFIC, PDU_TOO_LARGE, PDU_PROTOCOL_MISMATCH
     }
 }

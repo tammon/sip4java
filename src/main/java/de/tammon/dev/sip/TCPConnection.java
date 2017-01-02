@@ -7,15 +7,14 @@
 package de.tammon.dev.sip;
 
 import de.tammon.dev.sip.packets.*;
+import de.tammon.dev.sip.packets.parts.ExceptionBody;
 import de.tammon.dev.sip.packets.parts.Head;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.net.*;
 import java.util.Properties;
 
 public class TCPConnection implements SipConnection {
@@ -42,17 +41,31 @@ public class TCPConnection implements SipConnection {
         this.sipVersion = new Integer(properties.getProperty("sipVersion"));
 
         // Create new Socket Connection
-        this.socketConnection = new Socket();
-        this.socketConnection.connect(new InetSocketAddress(this.ipAddress, this.sipPort), leaseTimeout);
+        this.refreshSocketConnection();
 
-        this.dataOutputStream = new DataOutputStream(this.socketConnection.getOutputStream());
-        this.dataInputStream = new DataInputStream(this.socketConnection.getInputStream());
-
+        // check if the Drive responds to SIP-Ping before connecting
+        try {
+            if (this.respondsToPing()) this.connectSip();
+        } catch (UnknownServiceException e) {
+            e.printStackTrace();
+        }
         this.connectSip();
     }
 
     public TCPConnection() throws Exception {
         this(null);
+    }
+
+    private synchronized void refreshSocketConnection() throws Exception {
+        this.transactionId = 0;
+        this.socketConnection = new Socket();
+        try {
+            this.socketConnection.connect(new InetSocketAddress(this.ipAddress, this.sipPort), leaseTimeout);
+            this.dataOutputStream = new DataOutputStream(this.socketConnection.getOutputStream());
+            this.dataInputStream = new DataInputStream(this.socketConnection.getInputStream());
+        } catch (SocketTimeoutException e) {
+            throw new SocketTimeoutException("Drive does not respond to socket request. Probably wrong IP or not on network...");
+        }
     }
 
     private synchronized int getNewTransactionId (){
@@ -83,11 +96,14 @@ public class TCPConnection implements SipConnection {
 
         // Check if Drive threw an communication exception
         if (header.getMessageType() == 67) {
+            this.refreshSocketConnection();
             ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
-            throw new Exception("Drive threw Communication Exception. SIP-CommonErrorCode: "
-                    + exceptionResponse.getPacketBody().getCommonErrorCode()
-                    + "SIP-SpecificErrorCode: "
-                    + exceptionResponse.getPacketBody().getSpecificErrorCode());
+            if (exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.UNKNOWN_MESSAGE_TYPE)
+                throw new UnknownServiceException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
+            throw new ProtocolException("Drive threw Communication Exception. SIP-CommonErrorCode: "
+                    + ((exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.SERVICESPECIFIC)
+                    ? (" SIP-SpecificErrorCode: " + exceptionResponse.getPacketBody().getSpecificErrorCode())
+                    : (exceptionResponse.getPacketBody().getCommonErrorCode())));
         }
         else if (header.getMessageType() == response.getMessageType()){
             response.setData(rawResponse);
@@ -100,6 +116,19 @@ public class TCPConnection implements SipConnection {
         ConnectResponse response = (ConnectResponse) this.tcpSendAndReceive(request, new ConnectResponse());
         this.supportedMessages = response.getPacketBody().getSupportedMessageTypes();
         this.connected = true;
+    }
+
+    private boolean respondsToPing(){
+        Ping ping = new Ping(this.getNewTransactionId());
+        try {
+            this.tcpSendAndReceive(ping, new Pong());
+            return true;
+        } catch (SocketTimeoutException e) {
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean isConnected() {
