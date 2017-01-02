@@ -7,7 +7,9 @@
 package de.tammon.dev.sip.packets;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -85,4 +87,9 @@ public class SipByteUtils {
     public static long getSipPrimitive(long tcpLong){
         return Long.reverseBytes(tcpLong);
     }
- }
+
+    public static DataInputStream getDataInputStreamOfRawData (byte[]... rawInputBytes){
+        byte[] rawInputByteArray = SipByteUtils.concatenate(rawInputBytes);
+        return new DataInputStream(new ByteArrayInputStream(rawInputByteArray));
+    }
+}
