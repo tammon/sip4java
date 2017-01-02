@@ -109,4 +109,16 @@ public class TCPConnection implements SipConnection {
     public int[] getSupportedMessages() {
         return supportedMessages;
     }
+
+    public InetAddress getIpAddress() {
+        return ipAddress;
+    }
+
+    public int getSipPort() {
+        return sipPort;
+    }
+
+    public int getSipVersion() {
+        return sipVersion;
+    }
 }
