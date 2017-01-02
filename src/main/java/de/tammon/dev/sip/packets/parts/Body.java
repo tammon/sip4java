@@ -7,5 +7,5 @@
 package de.tammon.dev.sip.packets.parts;
 
 public interface Body {
-    byte[] getDataAsByteArray();
+
 }

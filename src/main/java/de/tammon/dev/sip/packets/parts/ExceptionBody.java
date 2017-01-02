@@ -26,13 +26,6 @@ public class ExceptionBody extends AbstractBody implements ResponseBody {
         return messageType;
     }
 
-    @Override
-    public byte[] getDataAsByteArray() {
-        return SipByteUtils.concatenate(
-                SipByteUtils.getByteArray(this.rawCommonErrorCode),
-                SipByteUtils.getByteArray(this.specificErrorCode));
-    }
-
     public commonErrorCodes getCommonErrorCode() {
         return commonErrorCode;
     }

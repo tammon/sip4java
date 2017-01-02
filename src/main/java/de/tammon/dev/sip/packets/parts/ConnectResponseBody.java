@@ -48,12 +48,6 @@ public class ConnectResponseBody extends AbstractBody implements ResponseBody {
         return messageType;
     }
 
-    //todo:implement
-    @Override
-    public byte[] getDataAsByteArray() {
-        return new byte[0];
-    }
-
     public int getSipVersion() {
         return sipVersion;
     }

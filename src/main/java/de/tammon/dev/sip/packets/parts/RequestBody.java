@@ -8,4 +8,5 @@ package de.tammon.dev.sip.packets.parts;
 
 public interface RequestBody extends Body {
     int getMessageType();
+    byte[] getDataAsByteArray();
 }
