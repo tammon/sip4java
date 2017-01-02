@@ -7,6 +7,6 @@
 package de.tammon.dev.sip.packets;
 
 public interface Response extends Packet {
-    void setData(byte[] read) throws Exception;
+    void setData(byte[] rawData) throws Exception;
     int getMessageType();
 }
