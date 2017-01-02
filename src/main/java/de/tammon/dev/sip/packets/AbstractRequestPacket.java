@@ -15,4 +15,8 @@ abstract class AbstractRequestPacket extends AbstractPacket implements Request{
         this.head = new Head(transactionId, requestBody.getMessageType());
         this.body = requestBody;
     }
+
+    public AbstractRequestPacket(int transactionId, int messageType){
+        this.head = new Head(transactionId, messageType);
+    }
 }
