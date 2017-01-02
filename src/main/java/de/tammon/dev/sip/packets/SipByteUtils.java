@@ -70,6 +70,19 @@ public class SipByteUtils {
         }
     }
 
+    public static byte[] concatenate(byte... inputByteArrays){
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try{
+            for (byte inputByteArray : inputByteArrays) {
+                outputStream.write(inputByteArray);
+            }
+            return outputStream.toByteArray();
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private static ByteBuffer getSipByteBuffer (int allocation){
         ByteBuffer byteBuffer = ByteBuffer.allocate(allocation);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);

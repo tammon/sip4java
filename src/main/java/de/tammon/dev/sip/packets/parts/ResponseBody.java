@@ -7,4 +7,5 @@
 package de.tammon.dev.sip.packets.parts;
 
 public interface ResponseBody extends Body {
+
 }
