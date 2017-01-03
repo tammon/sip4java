@@ -9,7 +9,11 @@ package net.tammon.sip.packets;
 import net.tammon.sip.packets.parts.Head;
 import net.tammon.sip.packets.parts.RequestBody;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 abstract class AbstractRequestPacket extends AbstractPacket implements Request{
+    protected RequestBody body;
 
     public AbstractRequestPacket(int transactionId, RequestBody requestBody) {
         this.head = new Head(transactionId, requestBody.getMessageType());
@@ -18,5 +22,17 @@ abstract class AbstractRequestPacket extends AbstractPacket implements Request{
 
     public AbstractRequestPacket(int transactionId, int messageType){
         this.head = new Head(transactionId, messageType);
+    }
+
+    public byte[] getTcpMsgAsByteArray() {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            out.write(this.head.getDataAsByteArray());
+            out.write(this.body.getDataAsByteArray());
+            return out.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

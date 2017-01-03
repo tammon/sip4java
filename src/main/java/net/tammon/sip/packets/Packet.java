@@ -10,8 +10,6 @@ import net.tammon.sip.packets.parts.Body;
 import net.tammon.sip.packets.parts.Head;
 
 interface Packet {
-    byte[] getTcpMsgAsByteArray();
-    Integer getPacketSize();
     Body getPacketBody();
     Head getPacketHead();
     int getTransactionId();

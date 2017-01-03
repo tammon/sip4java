@@ -6,7 +6,10 @@
 
 package net.tammon.sip.packets;
 
+import net.tammon.sip.packets.parts.ResponseBody;
+
 abstract class AbstractResponsePacket extends AbstractPacket implements Response {
+    protected ResponseBody body;
 
     public AbstractResponsePacket (){
         this.body = null;

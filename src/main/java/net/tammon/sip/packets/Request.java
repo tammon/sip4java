@@ -7,4 +7,5 @@
 package net.tammon.sip.packets;
 
 public interface Request extends Packet {
+    byte[] getTcpMsgAsByteArray();
 }
