@@ -51,7 +51,7 @@ public class TCPConnection implements SipConnection {
         try {
             if (this.respondsToPing()) this.connectSip();
         } catch (UnknownServiceException e) {
-            e.printStackTrace();
+            e.printStackTrace(); //todo: use logging instead of printing the exception
         }
         this.connectSip();
     }
@@ -107,7 +107,7 @@ public class TCPConnection implements SipConnection {
             this.refreshSocketConnection();
             ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
             if (exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.UNKNOWN_MESSAGE_TYPE)
-                throw new UnknownServiceException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
+                throw new UnknownServiceException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName()); //todo: create new SIP-Protocol Exception
             throw new ProtocolException("Drive threw Communication Exception. SIP-CommonErrorCode: "
                     + ((exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.SERVICESPECIFIC)
                     ? (" SIP-SpecificErrorCode: " + exceptionResponse.getPacketBody().getSpecificErrorCode())
