@@ -108,10 +108,10 @@ public class TCPConnection implements SipConnection {
             ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
             if (exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.UNKNOWN_MESSAGE_TYPE)
                 throw new UnknownServiceException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName()); //todo: create new SIP-Protocol Exception
-            throw new ProtocolException("Drive threw Communication Exception. SIP-CommonErrorCode: "
+            throw new ProtocolException("Drive threw Communication Exception."
                     + ((exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.SERVICESPECIFIC)
                     ? (" SIP-SpecificErrorCode: " + exceptionResponse.getPacketBody().getSpecificErrorCode())
-                    : (exceptionResponse.getPacketBody().getCommonErrorCode())));
+                    : (" SIP-CommonErrorCode: " + exceptionResponse.getPacketBody().getCommonErrorCode())));
         }
         else if (header.getMessageType() == response.getMessageType()){
             response.setData(rawResponse);
@@ -137,6 +137,13 @@ public class TCPConnection implements SipConnection {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public byte[] getParameterByIdn(int slaveIndex, int slaveExtension, String idn) throws Exception{
+        ReadOnlyData request = new ReadOnlyData(this.getNewTransactionId(), (short)slaveIndex, slaveExtension, idn);
+        ReadOnlyDataResponse response = (ReadOnlyDataResponse) this.tcpSendAndReceive(request, new ReadOnlyDataResponse());
+        System.out.println(response.getPacketBody().getAttribute());
+        return response.getPacketBody().getRawData();
     }
 
     public boolean isConnected() {
