@@ -4,8 +4,9 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip.packets.parts;
+package net.tammon.sip.packets.parts;
 
-public class ReadOnlyDataResponseBody extends AbstractBody implements ResponseBody {
-
+public interface RequestBody extends Body {
+    int getMessageType();
+    byte[] getDataAsByteArray();
 }

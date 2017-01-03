@@ -4,7 +4,8 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip;
+package net.tammon.sip.packets.parts;
 
-public interface SipConnection {
+public interface Body {
+
 }

@@ -4,10 +4,10 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip.packets;
+package net.tammon.sip.packets;
 
 
-import de.tammon.dev.sip.packets.parts.ConnectBody;
+import net.tammon.sip.packets.parts.ConnectBody;
 
 public class Connect extends AbstractRequestPacket {
 

@@ -4,8 +4,7 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip.packets.parts;
+package net.tammon.sip.packets;
 
-public interface Body {
-
+public interface Request extends Packet {
 }

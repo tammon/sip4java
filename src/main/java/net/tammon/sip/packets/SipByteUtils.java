@@ -4,7 +4,7 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip.packets;
+package net.tammon.sip.packets;
 
 
 import java.io.ByteArrayInputStream;

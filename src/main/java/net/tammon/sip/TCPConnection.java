@@ -4,11 +4,11 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip;
+package net.tammon.sip;
 
-import de.tammon.dev.sip.packets.*;
-import de.tammon.dev.sip.packets.parts.ExceptionBody;
-import de.tammon.dev.sip.packets.parts.Head;
+import net.tammon.sip.packets.*;
+import net.tammon.sip.packets.parts.ExceptionBody;
+import net.tammon.sip.packets.parts.Head;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;

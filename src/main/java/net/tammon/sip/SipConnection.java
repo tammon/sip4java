@@ -4,9 +4,7 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip.packets;
+package net.tammon.sip;
 
-public interface Response extends Packet {
-    void setData(byte[] rawData) throws Exception;
-    int getMessageType();
+public interface SipConnection {
 }

@@ -4,10 +4,10 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip.packets;
+package net.tammon.sip.packets;
 
-import de.tammon.dev.sip.packets.parts.ConnectResponseBody;
-import de.tammon.dev.sip.packets.parts.Head;
+import net.tammon.sip.packets.parts.ConnectResponseBody;
+import net.tammon.sip.packets.parts.Head;
 
 import java.util.Arrays;
 

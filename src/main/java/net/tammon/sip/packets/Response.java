@@ -4,9 +4,9 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip.packets.parts;
+package net.tammon.sip.packets;
 
-public interface RequestBody extends Body {
+public interface Response extends Packet {
+    void setData(byte[] rawData) throws Exception;
     int getMessageType();
-    byte[] getDataAsByteArray();
 }

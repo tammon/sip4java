@@ -4,9 +4,9 @@
  * This code is licensed under the GNU LGPLv2.1
  */
 
-package de.tammon.dev.sip.packets.parts;
+package net.tammon.sip.packets.parts;
 
-import de.tammon.dev.sip.packets.SipByteUtils;
+import net.tammon.sip.packets.SipByteUtils;
 
 import java.util.Arrays;
 
