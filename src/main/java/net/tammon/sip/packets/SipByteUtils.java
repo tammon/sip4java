@@ -120,9 +120,7 @@ public abstract class SipByteUtils {
         return new DataInputStream(new ByteArrayInputStream(rawInputByteArray));
     }
 
-    //todo: check, buggy!
     public static byte[] getIdnAsByteArray(String idn) throws IllegalArgumentException {
-        //todo: maybe some optimization without duplicate code
         if (idn.matches("^[SP]-\\d-\\d\\d\\d\\d[.]\\d[.]\\d$")){
             //decode byte[4]
             byte byte1 = Byte.parseByte(idn.substring(9,10));

@@ -47,7 +47,6 @@ public class ConnectResponseBody extends AbstractBody implements ResponseBody {
         this.leaseTimeout = SipByteUtils.getSipPrimitive(data.readInt());
         this.noSupportedMessageTypes = SipByteUtils.getSipPrimitive(data.readInt());
         this.supportedMessageTypes = new int[noSupportedMessageTypes];
-        //todo: optimize messageTypeMapping
         for (int i = 0; i < noSupportedMessageTypes; i++){
             try {
                 this.supportedMessageTypes[i] = SipByteUtils.getSipPrimitive(data.readInt());

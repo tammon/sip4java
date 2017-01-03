@@ -64,7 +64,7 @@ public class TCPConnection implements SipConnection {
         try {
             if (this.respondsToPing()) this.connectSip();
         } catch (UnknownServiceException e) {
-            e.printStackTrace(); //todo: use logging instead of printing the exception
+            e.printStackTrace();
         }
         this.connectSip();
     }
@@ -93,12 +93,11 @@ public class TCPConnection implements SipConnection {
     private synchronized Response tcpSendAndReceive(Request request, Response response) throws Exception {
 
         if (!Objects.isNull(this.supportedMessages) && !this.supportedMessages.contains(request.getPacketHead().getMessageType()))
-            throw new UnknownServiceException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages"); //todo:special Exception for not supported services
+            throw new UnknownServiceException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages");
         else this.dataOutputStream.write(request.getTcpMsgAsByteArray());
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        // todo: this read construct will probably run into an timeout if the message is 1024 byte long
         byte[] buffer = new byte[1024];
         while (true) {
             int readLength = dataInputStream.read(buffer);
@@ -120,7 +119,7 @@ public class TCPConnection implements SipConnection {
             this.refreshSocketConnection();
             ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
             if (exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.UNKNOWN_MESSAGE_TYPE)
-                throw new UnknownServiceException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName()); //todo: create new SIP-Protocol Exception
+                throw new UnknownServiceException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
             throw new ProtocolException("Drive threw Communication Exception."
                     + ((exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.SERVICESPECIFIC)
                     ? (" SIP-SpecificErrorCode: " + exceptionResponse.getPacketBody().getSpecificErrorCode())
