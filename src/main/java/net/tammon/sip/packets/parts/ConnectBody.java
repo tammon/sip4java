@@ -19,9 +19,7 @@
 
 package net.tammon.sip.packets.parts;
 
-import net.tammon.sip.packets.SipByteUtils;
-
-public class ConnectBody extends AbstractBody implements RequestBody {
+public final class ConnectBody extends AbstractBody implements RequestBody {
 
     private static final int messageType = 63;
     private int sipVersion;
