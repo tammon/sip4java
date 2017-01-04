@@ -19,27 +19,20 @@
 
 package net.tammon.sip.packets.parts;
 
-public final class ReadOnlyDataBody extends AbstractBody implements RequestBody {
-    private static final int messageType = 71;
-    private final short slaveIndex;
-    private final int slaveExtension;
-    private final String idn;
+import com.google.common.io.LittleEndianDataInputStream;
+import com.google.common.io.LittleEndianDataOutputStream;
 
-    public ReadOnlyDataBody(short slaveIndex, int slaveExtension, String idn) throws IllegalArgumentException{
-        this.slaveIndex = slaveIndex;
-        this.slaveExtension = slaveExtension;
-        this.idn = idn;
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.OutputStream;
+
+final class DataStreamFactory {
+    public static DataInput getLittleEndianDataInputStream(byte[] rawData){
+        return new LittleEndianDataInputStream(new ByteArrayInputStream(rawData));
     }
 
-    @Override
-    public byte[] getDataAsByteArray() {
-        return SipByteUtils.concatenate(
-                SipByteUtils.getByteArray(this.slaveIndex, this.slaveExtension),
-                SipByteUtils.getIdnAsByteArray(this.idn));
-    }
-
-    @Override
-    public int getMessageType() {
-        return messageType;
+    public static DataOutput getLittleEndianDataOutputStream(OutputStream outputStream){
+        return new LittleEndianDataOutputStream(outputStream);
     }
 }

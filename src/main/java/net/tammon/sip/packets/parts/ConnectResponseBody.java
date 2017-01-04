@@ -19,12 +19,10 @@
 
 package net.tammon.sip.packets.parts;
 
-import net.tammon.sip.packets.SipByteUtils;
-
-import java.io.DataInputStream;
+import java.io.DataInput;
 import java.io.IOException;
 
-public class ConnectResponseBody extends AbstractBody implements ResponseBody {
+public final class ConnectResponseBody extends AbstractBody implements ResponseBody {
 
     private static final int messageType = 64;
     private int sipVersion, busyTimeout, leaseTimeout, noSupportedMessageTypes;
@@ -38,18 +36,18 @@ public class ConnectResponseBody extends AbstractBody implements ResponseBody {
         this.supportedMessageTypes = supportedMessageTypes;
     }
 
-    public ConnectResponseBody(byte[]... rawBodyData) throws IllegalArgumentException, IOException {
+    public ConnectResponseBody(byte[] rawBodyData) throws IllegalArgumentException, IOException {
 
-        DataInputStream data = SipByteUtils.getDataInputStreamOfRawData(rawBodyData);
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyData);
 
-        this.sipVersion = SipByteUtils.getSipPrimitive(data.readInt());
-        this.busyTimeout = SipByteUtils.getSipPrimitive(data.readInt());
-        this.leaseTimeout = SipByteUtils.getSipPrimitive(data.readInt());
-        this.noSupportedMessageTypes = SipByteUtils.getSipPrimitive(data.readInt());
+        this.sipVersion = data.readInt();
+        this.busyTimeout = data.readInt();
+        this.leaseTimeout = data.readInt();
+        this.noSupportedMessageTypes = data.readInt();
         this.supportedMessageTypes = new int[noSupportedMessageTypes];
         for (int i = 0; i < noSupportedMessageTypes; i++){
             try {
-                this.supportedMessageTypes[i] = SipByteUtils.getSipPrimitive(data.readInt());
+                this.supportedMessageTypes[i] = data.readInt();
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -19,22 +19,24 @@
 
 package net.tammon.sip.packets.parts;
 
-import net.tammon.sip.packets.SipByteUtils;
+import java.io.DataInput;
+import java.io.FilterInputStream;
+import java.io.InvalidClassException;
 
-import java.io.DataInputStream;
-
-public class ReadOnlyDataResponseBody extends AbstractBody implements ResponseBody {
+public final class ReadOnlyDataResponseBody implements ResponseBody {
     final static int messageType = 72;
-    final int attribute;
-    final int lengthOfData;
-    final byte[] rawData;
+    int attribute;
+    int lengthOfData;
+    byte[] rawData;
 
-    public ReadOnlyDataResponseBody(byte[]... rawBodyData) throws Exception {
-        DataInputStream data = SipByteUtils.getDataInputStreamOfRawData(rawBodyData);
-        this.attribute = SipByteUtils.getSipPrimitive(data.readInt());
-        this.lengthOfData = SipByteUtils.getSipPrimitive(data.readInt());
+    public ReadOnlyDataResponseBody(byte[] rawBodyData) throws Exception {
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyData);
+        this.attribute = data.readInt();
+        this.lengthOfData = data.readInt();
         this.rawData = new byte[this.lengthOfData];
-        final int read = data.read(this.rawData);
+        if (data instanceof FilterInputStream)
+            ((FilterInputStream)data).read(this.rawData);
+        else throw new InvalidClassException("DataInputStream does not extend FilterInputStream. Grabbing data as byte array ist not possible!");
     }
 
     public static int getMessageType() {

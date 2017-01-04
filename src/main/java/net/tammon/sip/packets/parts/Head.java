@@ -19,12 +19,12 @@
 
 package net.tammon.sip.packets.parts;
 
-import net.tammon.sip.packets.SipByteUtils;
+import com.google.common.io.LittleEndianDataInputStream;
 
-import java.io.DataInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-public class Head extends AbstractPart {
+public final class Head extends AbstractPart {
     private int transactionId;
     private int messageType;
 
@@ -33,11 +33,14 @@ public class Head extends AbstractPart {
         this.messageType = messageType;
     }
 
-    public Head(byte[]... rawHeadData) throws IOException {
-        DataInputStream data = SipByteUtils.getDataInputStreamOfRawData(rawHeadData);
+    public Head(byte[] rawHeadData) throws IOException {
+        LittleEndianDataInputStream data = new LittleEndianDataInputStream(new ByteArrayInputStream(rawHeadData));
+        this.transactionId = data.readInt();
+        this.messageType = data.readInt();
+    }
 
-        this.transactionId = SipByteUtils.getSipPrimitive(data.readInt());
-        this.messageType = SipByteUtils.getSipPrimitive(data.readInt());
+    public int getMsgLength() {
+        return this.getDataAsByteArray().length;
     }
 
     public int getTransactionId() {
