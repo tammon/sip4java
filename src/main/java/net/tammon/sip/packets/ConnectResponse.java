@@ -39,6 +39,6 @@ public class ConnectResponse extends AbstractResponsePacket implements DynamicPa
     @Override
     public void setData(byte[] rawData) throws Exception {
         this.head = new Head(rawData);
-        this.body = new ConnectResponseBody(Arrays.copyOfRange(rawData, 8, rawData.length -1));
+        this.body = new ConnectResponseBody(Arrays.copyOfRange(rawData, head.getMsgLength(), rawData.length -1));
     }
 }

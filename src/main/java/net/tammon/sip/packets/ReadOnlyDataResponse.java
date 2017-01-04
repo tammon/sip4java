@@ -29,7 +29,7 @@ public class ReadOnlyDataResponse extends AbstractResponsePacket {
     @Override
     public void setData(byte[] rawData) throws Exception {
         this.head = new Head(rawData);
-        this.body = new ReadOnlyDataResponseBody(Arrays.copyOfRange(rawData, 8, rawData.length - 1));
+        this.body = new ReadOnlyDataResponseBody(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
     }
 
     @Override

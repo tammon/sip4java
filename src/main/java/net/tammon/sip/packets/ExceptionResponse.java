@@ -43,6 +43,6 @@ public class ExceptionResponse extends AbstractResponsePacket {
     @Override
     public void setData(byte[] rawData) throws Exception {
         this.head = new Head(rawData);
-        this.body = new ExceptionBody(Arrays.copyOfRange(rawData, 8, rawData.length -1));
+        this.body = new ExceptionBody(Arrays.copyOfRange(rawData, head.getMsgLength(), rawData.length -1));
     }
 }
