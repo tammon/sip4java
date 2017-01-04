@@ -59,13 +59,6 @@ public class TCPConnection implements SipConnection {
 
         // Create new Socket Connection
         this.refreshSocketConnection();
-
-        // check if the Drive responds to SIP-Ping before connecting
-        try {
-            if (this.respondsToPing()) this.connectSip();
-        } catch (UnknownServiceException e) {
-            e.printStackTrace();
-        }
         this.connectSip();
     }
 
