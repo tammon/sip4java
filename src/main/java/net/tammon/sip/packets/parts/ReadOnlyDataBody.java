@@ -22,10 +22,10 @@ package net.tammon.sip.packets.parts;
 public final class ReadOnlyDataBody extends AbstractBody implements RequestBody {
     private static final int messageType = 71;
     private final short slaveIndex;
-    private final int slaveExtension;
+    private final short slaveExtension;
     private final String idn;
 
-    public ReadOnlyDataBody(short slaveIndex, int slaveExtension, String idn) throws IllegalArgumentException{
+    public ReadOnlyDataBody(short slaveIndex, short slaveExtension, String idn) throws IllegalArgumentException{
         this.slaveIndex = slaveIndex;
         this.slaveExtension = slaveExtension;
         this.idn = idn;

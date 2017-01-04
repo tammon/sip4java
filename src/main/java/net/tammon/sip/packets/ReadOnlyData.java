@@ -24,7 +24,7 @@ import net.tammon.sip.packets.parts.ReadOnlyDataBody;
 
 public class ReadOnlyData extends AbstractRequestPacket {
 
-    public ReadOnlyData(int transactionId, short slaveIndex, int slaveExtension, String idn) throws IllegalArgumentException {
+    public ReadOnlyData(int transactionId, short slaveIndex, short slaveExtension, String idn) throws IllegalArgumentException {
         super(transactionId, new ReadOnlyDataBody(slaveIndex, slaveExtension, idn));
     }
 
