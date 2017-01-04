@@ -19,29 +19,6 @@
 
 package net.tammon.sip.packets.parts;
 
-import java.io.DataInput;
-
-public final class ExceptionBody extends AbstractBody implements ResponseBody {
-    private final static int messageType = 67;
-    private short rawCommonErrorCode;
-    private int specificErrorCode;
-    private CommonErrorCodes commonErrorCode;
-    public ExceptionBody(byte[] rawBodyDataArrays) throws Exception {
-        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyDataArrays);
-        this.rawCommonErrorCode = data.readShort();
-        this.specificErrorCode = data.readInt();
-        this.commonErrorCode = CommonErrorCodes.values()[this.rawCommonErrorCode-1];
-    }
-
-    public static int getMessageType() {
-        return messageType;
-    }
-
-    public CommonErrorCodes getCommonErrorCode() {
-        return commonErrorCode;
-    }
-
-    public int getSpecificErrorCode() {
-        return specificErrorCode;
-    }
+public enum CommonErrorCodes {
+    CONNECTION_ERROR, TIMEOUT, UNKNOWN_MESSAGE_TYPE, SERVICESPECIFIC, PDU_TOO_LARGE, PDU_PROTOCOL_MISMATCH
 }

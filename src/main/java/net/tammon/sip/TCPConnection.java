@@ -20,7 +20,7 @@
 package net.tammon.sip;
 
 import net.tammon.sip.packets.*;
-import net.tammon.sip.packets.parts.ExceptionBody;
+import net.tammon.sip.packets.parts.CommonErrorCodes;
 import net.tammon.sip.packets.parts.Head;
 
 import java.io.ByteArrayOutputStream;
@@ -118,10 +118,10 @@ public class TCPConnection implements SipConnection {
         if (header.getMessageType() == 67) {
             this.refreshSocketConnection();
             ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
-            if (exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.UNKNOWN_MESSAGE_TYPE)
+            if (exceptionResponse.getPacketBody().getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
                 throw new UnknownServiceException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
             throw new ProtocolException("Drive threw Communication Exception."
-                    + ((exceptionResponse.getPacketBody().getCommonErrorCode() == ExceptionBody.commonErrorCodes.SERVICESPECIFIC)
+                    + ((exceptionResponse.getPacketBody().getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
                     ? (" SIP-SpecificErrorCode: " + exceptionResponse.getPacketBody().getSpecificErrorCode())
                     : (" SIP-CommonErrorCode: " + exceptionResponse.getPacketBody().getCommonErrorCode())));
         }
