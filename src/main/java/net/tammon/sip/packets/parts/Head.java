@@ -19,9 +19,7 @@
 
 package net.tammon.sip.packets.parts;
 
-import com.google.common.io.LittleEndianDataInputStream;
-
-import java.io.ByteArrayInputStream;
+import java.io.DataInput;
 import java.io.IOException;
 
 public final class Head extends AbstractPart {
@@ -34,7 +32,7 @@ public final class Head extends AbstractPart {
     }
 
     public Head(byte[] rawHeadData) throws IOException {
-        LittleEndianDataInputStream data = new LittleEndianDataInputStream(new ByteArrayInputStream(rawHeadData));
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawHeadData);
         this.transactionId = data.readInt();
         this.messageType = data.readInt();
     }
