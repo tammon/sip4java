@@ -1,6 +1,6 @@
 # SERCOS Internet Protocol for Java
 ### Status: `ALPHA` _this Library is in development_
-This is a library to use sercos devices over the Sercos Internet Protocol (SIP).
+This is a library to communicate to sercos devices over the Sercos Internet Protocol (SIP).
 
 ###Functionality
 In the first steps of development the focus is set to reading data from a sercos drive.
@@ -11,7 +11,7 @@ Currently the following message types are supported:
 * Ping
 * ReadOnlyData (in development)
 
-Comming soon:
+Coming soon:
 * WriteData
 * ReadDataDescription
 * ReadEverything
