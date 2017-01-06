@@ -17,7 +17,8 @@ Comming soon:
 * ReadEverything
 
 ##License and Copyright
-#####Sercos Internet Protocol (SIP) version 1
+**Sercos Internet Protocol (SIP) version 1**
+
 Copyright (C) 2017. tammon (Tammo Schwindt)
 
 This library is free software; you can redistribute it and/or
