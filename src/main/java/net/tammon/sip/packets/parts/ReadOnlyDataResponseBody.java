@@ -21,32 +21,54 @@ package net.tammon.sip.packets.parts;
 
 import java.io.DataInput;
 import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InvalidClassException;
 
+/**
+ * This class is the response body to a ReadOnlyData message
+ */
 public final class ReadOnlyDataResponseBody implements ResponseBody {
-    final static int messageType = 72;
-    int attribute;
-    int lengthOfData;
-    byte[] rawData;
+    private final static int messageType = 72;
+    private  DataAttribute attribute;
+    private byte[] rawData;
 
-    public ReadOnlyDataResponseBody(byte[] rawBodyData) throws Exception {
+    /**
+     * creates a new response body object for ReadOnlyData messages
+     * @param rawBodyData the raw binary data of the response describing the body
+     * @throws IOException if an I/O error occurs on reading the binary data as DataStream
+     */
+    public ReadOnlyDataResponseBody(byte[] rawBodyData) throws IOException {
         DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyData);
-        this.attribute = data.readInt();
-        this.lengthOfData = data.readInt();
-        this.rawData = new byte[this.lengthOfData];
+        byte[] buffer = new byte[4];
         if (data instanceof FilterInputStream)
-            ((FilterInputStream)data).read(this.rawData);
+            ((FilterInputStream)data).read(buffer);
         else throw new InvalidClassException("DataInputStream does not extend FilterInputStream. Grabbing data as byte array ist not possible!");
+        this.attribute = new DataAttribute(buffer);
+        int lengthOfData = data.readInt();
+        this.rawData = new byte[lengthOfData];
+        ((FilterInputStream)data).read(this.rawData);
     }
 
+    /**
+     * Gets the messageType of the message
+     * @return message Type
+     */
     public static int getMessageType() {
         return messageType;
     }
 
-    public int getAttribute() {
+    /**
+     * Gets the data attribute as {@link DataAttribute} object
+     * @return {@link DataAttribute} object
+     */
+    public DataAttribute getAttribute() {
         return attribute;
     }
 
+    /**
+     * Gets the data as raw binary
+     * @return raw data as byte array
+     */
     public byte[] getRawData() {
         return rawData;
     }

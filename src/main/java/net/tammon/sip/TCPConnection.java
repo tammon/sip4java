@@ -147,7 +147,6 @@ public class TCPConnection implements SipConnection {
     public byte[] getParameterByIdn(int slaveIndex, int slaveExtension, String idn) throws Exception{
         ReadOnlyData request = new ReadOnlyData(this.getNewTransactionId(), (short)slaveIndex, (short)slaveExtension, idn);
         ReadOnlyDataResponse response = (ReadOnlyDataResponse) this.tcpSendAndReceive(request, new ReadOnlyDataResponse());
-        System.out.println(response.getPacketBody().getAttribute());
         return response.getPacketBody().getRawData();
     }
 
