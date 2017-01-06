@@ -17,7 +17,7 @@ Comming soon:
 * ReadEverything
 
 ##License and Copyright
-**Sercos Internet Protocol (SIP) version 1**
+**Sercos Internet Protocol (SIP) version 1 for Java**
 
 Copyright (C) 2017. tammon (Tammo Schwindt)
 
