@@ -23,19 +23,19 @@ public final class ReadOnlyDataBody extends AbstractBody implements RequestBody 
     private static final int messageType = 71;
     private final short slaveIndex;
     private final short slaveExtension;
-    private final String idn;
+    private final Idn idn;
 
     public ReadOnlyDataBody(short slaveIndex, short slaveExtension, String idn) throws IllegalArgumentException{
         this.slaveIndex = slaveIndex;
         this.slaveExtension = slaveExtension;
-        this.idn = idn;
+        this.idn = new Idn(idn);
     }
 
     @Override
     public byte[] getDataAsByteArray() {
         return Data.concatenate(
                 Data.getByteArray(this.slaveIndex, this.slaveExtension),
-                Idn.getIdnAsByteArray(this.idn));
+                this.idn.getIdnAsByteArray());
     }
 
     @Override

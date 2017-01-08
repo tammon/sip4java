@@ -19,6 +19,11 @@
 
 package net.tammon.sip.packets.parts;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 /**
  * Holds a SIP Identifier for parameter access.
  */
@@ -39,7 +44,7 @@ public final class Idn {
      * creates an SIP Idn Object from an eIdn as raw byte array
      * @param eIdn 32-bit idn as byte-array
      */
-    public Idn(byte[] eIdn) {
+    public Idn(byte[] eIdn) throws IOException {
         this.eIdn = eIdn;
         this.idn = getIdnAsString(eIdn);
     }
@@ -70,8 +75,38 @@ public final class Idn {
         return Data.concatenate(byte4, byte3);
     }
 
-    //todo: implement
-    public static String getIdnAsString(byte[] eIdn){
-        return "";
+    public static String getIdnAsString(byte[] eIdn) throws IOException {
+        DataInputStream data = new DataInputStream(new ByteArrayInputStream(eIdn));
+        byte[] buffer = new byte[4];
+        data.read(buffer);
+        char parType = (buffer[1] & 0x80) == 0x80 ? 'P' : 'S';
+        int num1 = (buffer[1] & 0x70) >> 0x4;
+        short num2 = ByteBuffer.wrap(new byte[]{(byte)(buffer[1] & 0xF), buffer[0]}).getShort();
+        int num3 = buffer[3];
+        int num4 = buffer[2];
+        return (new StringBuilder())
+                .append(parType)
+                .append('-')
+                .append(num1)
+                .append('-')
+                .append(addZerosTillLength(Integer.toString(num2), 4))
+                .append('.')
+                .append(num3)
+                .append('.')
+                .append(num4)
+                .toString();
+    }
+
+    private static String addZerosTillLength(String string, int neededLength){
+        for (int length = string.length(); length < neededLength; length++) string = new StringBuilder(string).insert(0, '0').toString();
+        return string;
+    }
+
+    public byte[] getIdnAsByteArray() {
+        return eIdn;
+    }
+
+    public String getIdn() {
+        return idn;
     }
 }
