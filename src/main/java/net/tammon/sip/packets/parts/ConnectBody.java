@@ -34,7 +34,7 @@ public final class ConnectBody extends AbstractBody implements RequestBody {
 
     @Override
     public byte[] getDataAsByteArray() {
-        return SipByteUtils.getByteArray(this.sipVersion, this.busyTimeOut, this.leaseTimeout);
+        return Data.getByteArray(this.sipVersion, this.busyTimeOut, this.leaseTimeout);
     }
 
     public int getSipVersion() {

@@ -19,34 +19,40 @@
 
 package net.tammon.sip.packets.parts;
 
+import net.tammon.sip.exceptions.TypeNotSupportedException;
+
 import java.io.DataInput;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InvalidClassException;
+import java.util.Arrays;
 
 /**
  * This class is the response body to a ReadOnlyData message
  */
 public final class ReadOnlyDataResponseBody implements ResponseBody {
     private final static int messageType = 72;
-    private  DataAttribute attribute;
-    private byte[] rawData;
+    private Data data;
 
     /**
      * creates a new response body object for ReadOnlyData messages
      * @param rawBodyData the raw binary data of the response describing the body
      * @throws IOException if an I/O error occurs on reading the binary data as DataStream
      */
-    public ReadOnlyDataResponseBody(byte[] rawBodyData) throws IOException {
+    public ReadOnlyDataResponseBody(byte[] rawBodyData) throws IOException, TypeNotSupportedException {
         DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyData);
         byte[] buffer = new byte[4];
         if (data instanceof FilterInputStream)
             ((FilterInputStream)data).read(buffer);
         else throw new InvalidClassException("DataInputStream does not extend FilterInputStream. Grabbing data as byte array ist not possible!");
-        this.attribute = new DataAttribute(buffer);
+        DataAttribute dataAttribute = new DataAttribute(buffer);
+
         int lengthOfData = data.readInt();
-        this.rawData = new byte[lengthOfData];
-        ((FilterInputStream)data).read(this.rawData);
+        byte[] rawData = new byte[lengthOfData];
+        ((FilterInputStream)data).read(rawData);
+        this.data = new Data(rawData, dataAttribute);
+        System.out.println(dataAttribute);
+        System.out.println(Arrays.toString(this.data.toDoubleArray()));
     }
 
     /**
@@ -58,18 +64,10 @@ public final class ReadOnlyDataResponseBody implements ResponseBody {
     }
 
     /**
-     * Gets the data attribute as {@link DataAttribute} object
-     * @return {@link DataAttribute} object
-     */
-    public DataAttribute getAttribute() {
-        return attribute;
-    }
-
-    /**
      * Gets the data as raw binary
      * @return raw data as byte array
      */
-    public byte[] getRawData() {
-        return rawData;
+    public Data getData() {
+        return this.data;
     }
 }

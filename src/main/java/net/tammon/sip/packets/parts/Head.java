@@ -58,6 +58,6 @@ public final class Head extends AbstractPart {
     }
 
     public byte[] getDataAsByteArray (){
-        return SipByteUtils.getByteArray(this.transactionId, this.messageType);
+        return Data.getByteArray(this.transactionId, this.messageType);
     }
 }

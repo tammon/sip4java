@@ -33,9 +33,9 @@ public final class ReadOnlyDataBody extends AbstractBody implements RequestBody 
 
     @Override
     public byte[] getDataAsByteArray() {
-        return SipByteUtils.concatenate(
-                SipByteUtils.getByteArray(this.slaveIndex, this.slaveExtension),
-                SipByteUtils.getIdnAsByteArray(this.idn));
+        return Data.concatenate(
+                Data.getByteArray(this.slaveIndex, this.slaveExtension),
+                Idn.getIdnAsByteArray(this.idn));
     }
 
     @Override
