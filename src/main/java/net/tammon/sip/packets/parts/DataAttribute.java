@@ -19,8 +19,13 @@
 
 package net.tammon.sip.packets.parts;
 
+import net.tammon.sip.exceptions.TypeNotSupportedException;
+
 import java.io.DataInput;
 import java.io.IOException;
+import java.util.Date;
+
+import static net.tammon.sip.packets.parts.DataAttribute.DisplayFormat.values;
 
 /**
  * The DataAttribute is send by the drive as a description to the sent data
@@ -33,14 +38,14 @@ final class DataAttribute {
     private final DisplayFormat displayFormat;
     private final byte decimalPointPosition;
     private final byte rights;
-    private final Type type;
+    private final Class dataType;
 
     /**
      * creates a new data attribute object
      * @param rawDataAttribute the 4 byte raw binary data of the body describing the data attribute
      * @throws IOException if an I/O error occurs while reading the byte array as DataStream
      */
-    public DataAttribute(byte[] rawDataAttribute) throws IOException {
+    public DataAttribute(byte[] rawDataAttribute) throws IOException,TypeNotSupportedException {
         DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawDataAttribute);
         int rawWeight;
         this.weight = (rawWeight = data.readUnsignedShort()) == 0 ? 1 : rawWeight;
@@ -48,11 +53,11 @@ final class DataAttribute {
         this.dataLength = DataLength.values()[(byteBuffer & 0x3)];
         this.isList = (byteBuffer & 0x4) == 0x4;
         this.isCommand = (byteBuffer & 0x8) == 0x8;
-        this.displayFormat = DisplayFormat.values()[(byteBuffer & 0x70) >> 0x4];
+        this.displayFormat = values()[(byteBuffer & 0x70) >> 0x4];
         byteBuffer = data.readByte();
         this.decimalPointPosition = (byte)(byteBuffer & 0xF);
         this.rights = (byte)((byteBuffer & 0xF0) >> 0x4);
-        this.type = getType(displayFormat, dataLength, weight, decimalPointPosition);
+        this.dataType = getJavaType(displayFormat, dataLength, weight, decimalPointPosition, isList);
     }
 
     public int getWeight() {
@@ -83,9 +88,10 @@ final class DataAttribute {
         return rights;
     }
 
-    public Type getType() {
-        return type;
+    public Class getJavaType() {
+        return this.dataType;
     }
+
 
     /**
      * This method calculates the native data type from the different attributes of the data attribute
@@ -95,63 +101,59 @@ final class DataAttribute {
      * @param decimalPointPosition the position of the decimal point of the number
      * @return a native data type used on the client side
      */
-    private Type getType(DisplayFormat displayFormat, DataLength dataLength, int weight, byte decimalPointPosition) {
+    private Class getJavaType(DisplayFormat displayFormat, DataLength dataLength, int weight, byte decimalPointPosition, boolean isList) throws TypeNotSupportedException {
         switch (displayFormat)
         {
             case Binary:
-            case UnsignedDecimal:
-            case HexaDecimal:
-                switch (dataLength)
-                {
+                switch (dataLength){
                     case oneByte:
-                        return (int) decimalPointPosition != 0 ? Type.Single : Type.Byte;
-                    case twoBytes:
-                        if ((int) decimalPointPosition != 0)
-                            return Type.Single;
-                        return weight != 1 ? Type.UInt32 : Type.UInt16;
-                    case fourBytes:
-                        if ((int) decimalPointPosition != 0)
-                            return Type.Double;
-                        return weight != 1 ? Type.UInt64 : Type.UInt32;
-                    case eightBytes:
-                        return (int) decimalPointPosition == 0 && weight == 1 ? Type.UInt64 : Type.Decimal;
+                        return isList ? byte[].class : byte.class;
+                    default:
+                        return isList ? byte[][].class : byte[].class;
                 }
-            case SignedDecimal:
-                switch (dataLength)
-                {
+            case UnsignedDecimal:
+                switch (dataLength) {
                     case oneByte:
-                        return (int) decimalPointPosition != 0 ? Type.Single : Type.SByte;
+                        if(decimalPointPosition == 0) return isList ? short[].class : short.class;
+                        else return isList ? float[].class : float.class;
                     case twoBytes:
-                        if ((int) decimalPointPosition != 0)
-                            return Type.Single;
-                        return weight != 1 ? Type.Int32 : Type.Int16;
+                        if(decimalPointPosition == 0) return isList ? int[].class : int.class;
+                        else return isList ? float[].class : float.class;
                     case fourBytes:
-                        if ((int) decimalPointPosition != 0)
-                            return Type.Double;
-                        return weight != 1 ? Type.Int64 : Type.Int32;
+                        if(decimalPointPosition == 0) return isList ? long[].class : long.class;
+                        else return isList ? double[].class : double.class;
                     case eightBytes:
-                        return (int) decimalPointPosition == 0 && weight == 1 ? Type.Int64 : Type.Decimal;
+                        throw new TypeNotSupportedException("eight byte unsigned decimal is currently not supported by this library! Sorry...");
+                }
+            case HexaDecimal:
+                return byte[][].class;
+            case SignedDecimal:
+                switch (dataLength) {
+                    case oneByte:
+                        if(decimalPointPosition == 0) return isList ? byte[].class : byte.class;
+                        else return isList ? float[].class : float.class;
+                    case twoBytes:
+                        if(decimalPointPosition == 0) return isList ? short[].class : short.class;
+                        else return isList ? float[].class : float.class;
+                    case fourBytes:
+                        if(decimalPointPosition == 0) return isList ? int[].class : int.class;
+                        else return isList ? double[].class : double.class;
+                    case eightBytes:
+                        if(decimalPointPosition == 0) return isList ? long[].class : long.class;
+                        else return isList ? double[].class : double.class;
                 }
             case String:
-                if (dataLength == DataLength.oneByte)
-                    return Type.String;
+                if(dataLength.equals(DataLength.oneByte))
+                    return String.class;
                 break;
             case IDN:
-                if (dataLength == DataLength.fourBytes)
-                    return Type.UInt32;
+                if(dataLength.equals(DataLength.fourBytes))
+                    return isList ? String[].class : String.class;
                 break;
             case Float:
-                switch (dataLength)
-                {
-                    case fourBytes:
-                        return Type.Single;
-                    case eightBytes:
-                        return Type.Double;
-                }
+                return isList ? double[].class : double.class;
             case SERCOSTime:
-                if (dataLength == DataLength.eightBytes)
-                    return Type.DateTime;
-                break;
+                return isList ? Date[].class : Date.class;
             default:
                 throw new IllegalArgumentException("Unknown display format! : " + displayFormat);
         }
@@ -166,15 +168,24 @@ final class DataAttribute {
                 + "\nDataLength: " + dataLength
                 + "\nDisplay Format: " + displayFormat
                 + "\nDecimal Point Position: " + decimalPointPosition
-                + "\nRights: " + rights
-                + "\ntype: " + type;
+                + "\nRights: " + rights;
     }
 
     /**
      * specifies the length of the single data packets
      */
     public enum DataLength {
-        oneByte, twoBytes, fourBytes, eightBytes
+        oneByte(1), twoBytes(2), fourBytes(4), eightBytes(8);
+
+        private int value;
+
+        DataLength(int value) {
+            this.value = value;
+        }
+
+        public int getValue(){
+            return this.value;
+        }
     }
 
     /**
@@ -182,7 +193,14 @@ final class DataAttribute {
      */
     public enum DisplayFormat {
         Binary, UnsignedDecimal, SignedDecimal, HexaDecimal, String,
-        IDN, Float, SERCOSTime, StructuredNode, Undefined
+        IDN, Float, SERCOSTime, StructuredNode, Undefined;
+
+        public boolean equalsAny(DisplayFormat... displayFormats){
+            for(DisplayFormat displayFormat : displayFormats){
+                if(this.equals(displayFormat)) return true;
+            }
+            return false;
+        }
     }
 
     /**
