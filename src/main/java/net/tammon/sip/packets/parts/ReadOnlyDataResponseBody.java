@@ -25,7 +25,6 @@ import java.io.DataInput;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InvalidClassException;
-import java.util.Arrays;
 
 /**
  * This class is the response body to a ReadOnlyData message
@@ -51,8 +50,6 @@ public final class ReadOnlyDataResponseBody implements ResponseBody {
         byte[] rawData = new byte[lengthOfData];
         ((FilterInputStream)data).read(rawData);
         this.data = new Data(rawData, dataAttribute);
-        System.out.println(dataAttribute);
-        System.out.println(Arrays.toString(this.data.toDoubleArray()));
     }
 
     /**
