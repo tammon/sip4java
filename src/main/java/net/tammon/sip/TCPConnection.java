@@ -79,7 +79,7 @@ public class TCPConnection implements SipConnection {
         }
     }
 
-    private synchronized int getNewTransactionId (){
+    private synchronized int getNewTransactionId() {
         return this.transactionId++;
     }
 
@@ -95,7 +95,7 @@ public class TCPConnection implements SipConnection {
         while (true) {
             int readLength = dataInputStream.read(buffer);
             outputStream.write(buffer, 0, readLength + 1);
-            if (readLength <1024) break;
+            if (readLength < 1024) break;
         }
 
         byte[] rawResponse = outputStream.toByteArray();
@@ -117,8 +117,7 @@ public class TCPConnection implements SipConnection {
                     + ((exceptionResponse.getPacketBody().getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
                     ? (" SIP-SpecificErrorCode: " + exceptionResponse.getPacketBody().getSpecificErrorCode())
                     : (" SIP-CommonErrorCode: " + exceptionResponse.getPacketBody().getCommonErrorCode())));
-        }
-        else if (header.getMessageType() == response.getMessageType()){
+        } else if (header.getMessageType() == response.getMessageType()) {
             response.setData(rawResponse);
             return response;
         } else throw new Exception("Invalid Message Type Response");
@@ -131,7 +130,7 @@ public class TCPConnection implements SipConnection {
         this.connected = true;
     }
 
-    private boolean respondsToPing(){
+    private boolean respondsToPing() {
         Ping ping = new Ping(this.getNewTransactionId());
         try {
             this.tcpSendAndReceive(ping, new Pong());
@@ -144,10 +143,61 @@ public class TCPConnection implements SipConnection {
         }
     }
 
-    public byte[] getParameterByIdn(int slaveIndex, int slaveExtension, String idn) throws Exception{
-        ReadOnlyData request = new ReadOnlyData(this.getNewTransactionId(), (short)slaveIndex, (short)slaveExtension, idn);
-        ReadOnlyDataResponse response = (ReadOnlyDataResponse) this.tcpSendAndReceive(request, new ReadOnlyDataResponse());
-        return response.getPacketBody().getData().getRawData();
+    public String readDataAsString(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toString();
+    }
+
+    public byte readDataAsByte(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toByte();
+    }
+
+    public short readDataAsShort(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toShort();
+    }
+
+    public int readDataAsInt(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toInt();
+    }
+
+    public long readDataAsLong(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toLong();
+    }
+
+    public float readDataAsFloat(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toFloat();
+    }
+
+    public double readDataAsDouble(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toDouble();
+    }
+
+    public byte[] readDataAsByteArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toByteArray();
+    }
+
+    public short[] readDataAsShortArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toShortArray();
+    }
+
+    public int[] readDataAsIntArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toIntArray();
+    }
+
+    public long[] readDataAsLongArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toLongArray();
+    }
+
+    public float[] readDataAsFloatArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toFloatArray();
+    }
+
+    public double[] readDataAsDoubleArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toDoubleArray();
+    }
+
+    private ReadOnlyDataResponse readData(int slaveIndex, int slaveExtension, String idn) throws Exception {
+        ReadOnlyData request = new ReadOnlyData(this.getNewTransactionId(), (short) slaveIndex, (short) slaveExtension, idn);
+        return (ReadOnlyDataResponse) this.tcpSendAndReceive(request, new ReadOnlyDataResponse());
     }
 
     public boolean isConnected() {
