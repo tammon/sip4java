@@ -9,7 +9,7 @@ Further functionality will follow in later releases.
 Currently the following message types are supported:
 * Connect
 * Ping
-* ReadOnlyData (in development)
+* ReadOnlyData
 
 Coming soon:
 * WriteData
