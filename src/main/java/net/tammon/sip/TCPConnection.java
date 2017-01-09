@@ -34,6 +34,9 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * The TCPConnection class implements the SipConnection Interface and creates a sip connection via the TCP/IP protocol
+ */
 public class TCPConnection implements SipConnection {
     private InetAddress ipAddress;
     private int maxDelay, leaseTimeout, busyTimeout, sipPort, sipVersion;
@@ -44,6 +47,12 @@ public class TCPConnection implements SipConnection {
     private DataOutputStream dataOutputStream;
     private DataInputStream dataInputStream;
 
+    /**
+     * Establishes a TCP connection to a sercos device with given IP Address
+     *
+     * @param host domain name or IP Address of the drive
+     * @throws Exception in case of communication problems
+     */
     public TCPConnection(String host) throws Exception {
 
         // Load Default Properties from properties file and initialize
@@ -62,10 +71,21 @@ public class TCPConnection implements SipConnection {
         this.connectSip();
     }
 
+    /**
+     * Establishes a TCP connection to a sercos device with the standard IP address of an IndraDrive (192.168.0.1)
+     *
+     * @throws Exception in case of communication problems
+     */
     public TCPConnection() throws Exception {
         this(null);
     }
 
+    /**
+     * Establishes a new sip connection by reconnecting the socket and the sercos device.
+     * Resets the list of supported messages
+     *
+     * @throws Exception in case of communication problems
+     */
     private synchronized void refreshSocketConnection() throws Exception {
         this.transactionId = 0;
         this.socketConnection = new Socket();
@@ -79,10 +99,25 @@ public class TCPConnection implements SipConnection {
         }
     }
 
+    /**
+     * Generates synchronized a new transaction id for a new sip interaction by increasing the current transaction id by one.
+     *
+     * @return new transaction id
+     */
     private synchronized int getNewTransactionId() {
         return this.transactionId++;
     }
 
+    /**
+     * This method is the general abstraction for all sip tcp communication between the library and the sercos device.
+     * It takes tcp request and response packets of the sip library. It sends the request and returns the response.
+     * The tcp send and receive logic is fully synchronized to avoid multiple instances and therefor requests at a time.
+     *
+     * @param request sip request tcp packet
+     * @param response sip response tcp packet type (generally empty initialized object)
+     * @return sip response tcp packet of the given type with the packet data set to the object
+     * @throws Exception in case of communication problems
+     */
     private synchronized Response tcpSendAndReceive(Request request, Response response) throws Exception {
 
         if (!Objects.isNull(this.supportedMessages) && !this.supportedMessages.contains(request.getPacketHead().getMessageType()))
@@ -123,6 +158,11 @@ public class TCPConnection implements SipConnection {
         } else throw new Exception("Invalid Message Type Response");
     }
 
+    /**
+     * This method sends a sip connection request to the sercos device and handles the incoming response
+     *
+     * @throws Exception in case of communication problems
+     */
     private void connectSip() throws Exception {
         Connect request = new Connect(this.getNewTransactionId(), this.sipVersion, this.busyTimeout, this.leaseTimeout);
         ConnectResponse response = (ConnectResponse) this.tcpSendAndReceive(request, new ConnectResponse());
@@ -130,6 +170,12 @@ public class TCPConnection implements SipConnection {
         this.connected = true;
     }
 
+
+    /**
+     * Checks if the sercos device responds to a ping sip message
+     *
+     * @return true if the device responds, false if it doesn't
+     */
     private boolean respondsToPing() {
         Ping ping = new Ping(this.getNewTransactionId());
         try {
@@ -143,79 +189,235 @@ public class TCPConnection implements SipConnection {
         }
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public String readDataAsString(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toString();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public byte readDataAsByte(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toByte();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public short readDataAsShort(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toShort();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public int readDataAsInt(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toInt();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public long readDataAsLong(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toLong();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public float readDataAsFloat(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toFloat();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public double readDataAsDouble(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toDouble();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public byte[] readDataAsByteArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toByteArray();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public short[] readDataAsShortArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toShortArray();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public int[] readDataAsIntArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toIntArray();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public long[] readDataAsLongArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toLongArray();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public float[] readDataAsFloatArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toFloatArray();
     }
 
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
     public double[] readDataAsDoubleArray(int slaveIndex, int slaveExtension, String idn) throws Exception {
         return this.readData(slaveIndex, slaveExtension, idn).getPacketBody().getData().toDoubleArray();
     }
 
+    /**
+     * This method is the general abstraction of all public ReadOnlyData methods.
+     * It actually creates the request and response bodies and triggers the TCP send and receive.
+     *
+     *
+     * @param slaveIndex the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the {@link ReadOnlyDataResponse} which is received after the tcp request
+     * @throws Exception if any communication or data handling problem occurs
+     */
     private ReadOnlyDataResponse readData(int slaveIndex, int slaveExtension, String idn) throws Exception {
         ReadOnlyData request = new ReadOnlyData(this.getNewTransactionId(), (short) slaveIndex, (short) slaveExtension, idn);
         return (ReadOnlyDataResponse) this.tcpSendAndReceive(request, new ReadOnlyDataResponse());
     }
 
+
+    /**
+     * Checks whether or not the TCP connection to the sercos slave is still connected
+     *
+     * @return true if the connection is alive
+     */
     public boolean isConnected() {
         return connected && this.socketConnection.isConnected();
     }
 
+    /**
+     * Returns a list of the supported message types of the sercos device.
+     * This list is initially sent by the device during the sip connection process.
+     *
+     * @return the list of supported message types
+     */
     public List<Integer> getSupportedMessages() {
         return supportedMessages;
     }
 
+
+    /**
+     * Returns the IP address of the sercos device which is used by this TCP connection.
+     *
+     * @return IP address of sercos device as {@link InetAddress}
+     */
     public InetAddress getIpAddress() {
         return ipAddress;
     }
 
+    /**
+     * Returns the used sercos device port of the current sip connection
+     *
+     * @return used sercos device port
+     */
     public int getSipPort() {
         return sipPort;
     }
 
+    /**
+     * Returns the used version of the Sercos Internet Protocol
+     *
+     * @return version of Sercos Internet Protocol
+     */
     public int getSipVersion() {
         return sipVersion;
     }
