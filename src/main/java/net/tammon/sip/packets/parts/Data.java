@@ -26,16 +26,31 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This class holds data of sip data request and response bodies
+ */
 public final class Data {
 
     private final DataAttribute dataAttribute;
     private final byte[] rawData;
 
+    /**
+     * Creates a new instance of data by given rawData as byte array read from the packet
+     *
+     * @param rawData raw byte array from packet
+     * @param dataAttribute data attribute which is provided in the packet
+     */
     public Data(byte[] rawData, DataAttribute dataAttribute) {
         this.rawData = rawData;
         this.dataAttribute = dataAttribute;
     }
 
+    /**
+     * Returns a little endian byte array of the given numbers
+     *
+     * @param numbers numbers to be converted
+     * @return numbers as little endian byte array
+     */
     static byte[] getByteArray(Number... numbers) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutput data = DataStreamFactory.getLittleEndianDataOutputStream(byteArrayOutputStream);
@@ -53,6 +68,12 @@ public final class Data {
         }
     }
 
+    /**
+     * Returns a concatenated byte array of given byte arrays
+     *
+     * @param inputByteArrays to be concatenated byte arrays
+     * @return concatenated byte array
+     */
     static byte[] concatenate(byte[]... inputByteArrays) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
@@ -66,6 +87,12 @@ public final class Data {
         }
     }
 
+    /**
+     * Returns a concatenated byte array of given bytes
+     *
+     * @param inputByteArrays to be concatenated bytes
+     * @return concatenated byte array
+     */
     static byte[] concatenate(byte... inputByteArrays) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
@@ -80,7 +107,8 @@ public final class Data {
     }
 
     private static String addZerosIfNeeded(String number, int neededLength) {
-        while (number.length() <= neededLength) number = new StringBuilder(number).insert(number.charAt(0) == '-' ? 1 : 0, '0').toString();
+        while (number.length() <= neededLength)
+            number = new StringBuilder(number).insert(number.charAt(0) == '-' ? 1 : 0, '0').toString();
         return number;
     }
 
@@ -258,15 +286,15 @@ public final class Data {
     }
 
     public byte[][] toBinaryArray() throws IllegalTypeConversionException {
-        if (this.dataAttribute.getJavaType().equals(byte[][].class)){
+        if (this.dataAttribute.getJavaType().equals(byte[][].class)) {
             byte[][] output = new byte[this.rawData.length / this.dataAttribute.getDataLength().getValue()][this.dataAttribute.getDataLength().getValue()];
-                for (int i = 0; i < output.length; i++) {
-                    int k = this.dataAttribute.getDataLength().getValue()-1;
-                    for (int j = 0; j < this.dataAttribute.getDataLength().getValue(); j++) {
-                        output[i][j] = this.rawData[i * this.dataAttribute.getDataLength().getValue() + k];
-                        k--;
-                    }
+            for (int i = 0; i < output.length; i++) {
+                int k = this.dataAttribute.getDataLength().getValue() - 1;
+                for (int j = 0; j < this.dataAttribute.getDataLength().getValue(); j++) {
+                    output[i][j] = this.rawData[i * this.dataAttribute.getDataLength().getValue() + k];
+                    k--;
                 }
+            }
             return output;
         }
         throw new IllegalTypeConversionException(this.dataAttribute.getJavaType(), byte[][].class);
@@ -479,33 +507,34 @@ public final class Data {
             if (this.dataAttribute.getJavaType().equals(double.class)) return Double.toString(this.toDouble());
             if (this.dataAttribute.getJavaType().equals(byte[].class)) {
                 StringBuilder stringBuilder = new StringBuilder();
-                if(this.dataAttribute.getDisplayFormat().equals(DataAttribute.DisplayFormat.Binary)){
+                if (this.dataAttribute.getDisplayFormat().equals(DataAttribute.DisplayFormat.Binary)) {
                     stringBuilder.append("0b");
-                    for(byte bytes : this.toByteArray())
+                    for (byte bytes : this.toByteArray())
                         stringBuilder.insert(2, Data.addZerosIfNeeded(Integer.toBinaryString(bytes), 8));
-                } else if (this.dataAttribute.getDisplayFormat().equalsAny(DataAttribute.DisplayFormat.HexaDecimal)){
+                } else if (this.dataAttribute.getDisplayFormat().equalsAny(DataAttribute.DisplayFormat.HexaDecimal)) {
                     stringBuilder.append("0x");
-                    for(byte bytes : this.toByteArray())
+                    for (byte bytes : this.toByteArray())
                         stringBuilder.insert(2, Integer.toHexString(bytes));
                 } else return Arrays.toString(this.toByteArray());
             }
             if (this.dataAttribute.getJavaType().equals(byte[][].class)) {
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append('[');
-                if(this.dataAttribute.getDisplayFormat().equals(DataAttribute.DisplayFormat.Binary)){
-                    for(byte[] bytes : this.toListOfBinaryArray()){
+                if (this.dataAttribute.getDisplayFormat().equals(DataAttribute.DisplayFormat.Binary)) {
+                    for (byte[] bytes : this.toListOfBinaryArray()) {
                         stringBuilder.append("0b");
-                        for(byte rawByte : bytes) stringBuilder.append(Data.addZerosIfNeeded(Integer.toBinaryString(rawByte), 8));
+                        for (byte rawByte : bytes)
+                            stringBuilder.append(Data.addZerosIfNeeded(Integer.toBinaryString(rawByte), 8));
                         stringBuilder.append(",");
                     }
-                } else if (this.dataAttribute.getDisplayFormat().equalsAny(DataAttribute.DisplayFormat.HexaDecimal)){
-                    for(byte[] bytes : this.toListOfBinaryArray()){
+                } else if (this.dataAttribute.getDisplayFormat().equalsAny(DataAttribute.DisplayFormat.HexaDecimal)) {
+                    for (byte[] bytes : this.toListOfBinaryArray()) {
                         stringBuilder.append("0x");
-                        for(byte rawByte : bytes) stringBuilder.append(Integer.toHexString(rawByte));
+                        for (byte rawByte : bytes) stringBuilder.append(Integer.toHexString(rawByte));
                         stringBuilder.append(",");
                     }
                 }
-                stringBuilder.deleteCharAt(stringBuilder.toString().length()-1);
+                stringBuilder.deleteCharAt(stringBuilder.toString().length() - 1);
                 return stringBuilder.append(']').toString();
             }
             if (this.dataAttribute.getJavaType().equals(short[].class)) return Arrays.toString(this.toShortArray());
@@ -518,7 +547,7 @@ public final class Data {
                 DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData));
                 switch (this.dataAttribute.getDisplayFormat()) {
                     case String:
-                        return new String(this.rawData, 0 , this.rawData.length, "ASCII");
+                        return new String(this.rawData, 0, this.rawData.length, "ASCII");
                     case IDN:
                         byte[] buffer = new byte[4];
                         return (new Idn(buffer)).getIdn();
@@ -536,18 +565,32 @@ public final class Data {
         return this.dataAttribute.getDisplayFormat().equals(DataAttribute.DisplayFormat.SignedDecimal);
     }
 
+    /**
+     * Returns the raw data of the packet as byte array
+     *
+     * @return raw data as byte array
+     */
     public byte[] getRawData() {
         return this.rawData;
     }
 
+    /**
+     * @return whether or not the data is a list or array
+     */
     public boolean isList() {
         return this.dataAttribute.isList();
     }
 
+    /**
+     * @return whether or not the data is a command
+     */
     public boolean isCommand() {
         return this.dataAttribute.isCommand();
     }
 
+    /**
+     * @return the corresponding java data type to the sercos device display format and length of the data
+     */
     public Class getJavaType() {
         return this.dataAttribute.getJavaType();
     }
