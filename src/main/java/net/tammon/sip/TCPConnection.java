@@ -23,14 +23,9 @@ import net.tammon.sip.packets.*;
 import net.tammon.sip.packets.parts.CommonErrorCodes;
 import net.tammon.sip.packets.parts.Head;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.*;
-import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -46,14 +41,21 @@ public class TCPConnection implements SipConnection {
     private Socket socketConnection;
     private DataOutputStream dataOutputStream;
     private DataInputStream dataInputStream;
+    private Timer keepAliveTimer;
 
     /**
      * Establishes a TCP connection to a sercos device with given IP Address
      *
+     * This connection can have a keepAlive flag which will maintain the SIP connection even if no request gets sent
+     * for a longer duration than the leaseTimeout. This will prevent the drive of closing the socket connection after
+     * the lease timeout. If a keep alive is used it is mandatory to call the disconnect() method to stop the keep alive
+     * functionality. If disconnect() is not called the tcp connection will prevent your program from exiting.
+     *
      * @param host domain name or IP Address of the drive
+     * @param keepAlive flag if the connection should stay alive even if no request are sent
      * @throws Exception in case of communication problems
      */
-    public TCPConnection(String host) throws Exception {
+    public TCPConnection(String host, boolean keepAlive) throws Exception {
 
         // Load Default Properties from properties file and initialize
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("sipDefault.properties");
@@ -69,15 +71,28 @@ public class TCPConnection implements SipConnection {
         // Create new Socket Connection
         this.refreshSocketConnection();
         this.connectSip();
+        if(keepAlive) this.restartKeepAliveTimer();
     }
 
     /**
      * Establishes a TCP connection to a sercos device with the standard IP address of an IndraDrive (192.168.0.1)
+     * This connection has no keepAlive and will timeout if no input request comes in for longer then the standard leaseTimeout of 10s
      *
      * @throws Exception in case of communication problems
      */
     public TCPConnection() throws Exception {
-        this(null);
+        this(null, false);
+    }
+
+    /**
+     * Establishes a TCP connection to a sercos device with the given IP address
+     * This connection has no keepAlive and will timeout if no input request comes in for longer then the standard leaseTimeout of 10s
+     *
+     * @param host domain name or IP Address of the drive
+     * @throws Exception in case of communication problems
+     */
+    public TCPConnection(String host) throws Exception {
+        this(host, false);
     }
 
     /**
@@ -119,7 +134,6 @@ public class TCPConnection implements SipConnection {
      * @throws Exception in case of communication problems
      */
     private synchronized Response tcpSendAndReceive(Request request, Response response) throws Exception {
-
         if (!Objects.isNull(this.supportedMessages) && !this.supportedMessages.contains(request.getPacketHead().getMessageType()))
             throw new UnknownServiceException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages");
         else this.dataOutputStream.write(request.getTcpMsgAsByteArray());
@@ -435,5 +449,29 @@ public class TCPConnection implements SipConnection {
     @Override
     public int getSipVersion() {
         return sipVersion;
+    }
+
+    private void restartKeepAliveTimer(){
+        this.keepAliveTimer = new Timer();
+        final TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                respondsToPing();
+            }
+        };
+        this.keepAliveTimer.schedule(timerTask, Math.round(this.leaseTimeout * 0.7));
+    }
+
+    /**
+     * Stops the keep alive loop and closes the socket connection to the sercos device
+     */
+    public void disconnect(){
+        try {
+            this.keepAliveTimer.cancel();
+            this.keepAliveTimer.purge();
+            this.socketConnection.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
     }
 }
