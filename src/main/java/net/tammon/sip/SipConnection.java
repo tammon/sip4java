@@ -23,6 +23,19 @@ import java.net.InetAddress;
 import java.util.List;
 
 public interface SipConnection {
+
+    /**
+     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
+     * It reads out the raw data of the response as raw data byte array.
+     *
+     * @param slaveIndex     the slave index of the sercos device (default: 0)
+     * @param slaveExtension the slave extentension of the sercos device (default: 0)
+     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
+     * @return the data of the response in the specified format
+     * @throws Exception if any communication or data handling problem occurs
+     */
+    byte[] readDataAsRawByteArray(int slaveIndex, int slaveExtension, String idn) throws Exception;
+
     /**
      * Checks whether or not the TCP connection to the sercos slave is still connected
      *
