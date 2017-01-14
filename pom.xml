@@ -32,9 +32,11 @@
     <groupId>net.tammon</groupId>
     <artifactId>sip</artifactId>
     <version>0.1.0</version>
+    <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>This is a library to communicate to sercos devices over the Sercos Internet Protocol (SIP)</description>
+    <description>This is a library to communicate to sercos devices over the Sercos Internet Protocol (SIP)
+    </description>
     <url>https://github.com/tammon/sip4java</url>
 
     <licenses>
@@ -43,6 +45,28 @@
             <url>http://www.opensource.org/licenses/mit-license.php</url>
         </license>
     </licenses>
+
+    <developers>
+        <developer>
+            <name>Tammo Schwindt</name>
+            <email>dev@tammon.net</email>
+            <organization>Tammon</organization>
+            <organizationUrl>https://github.com/tammon</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/tammon/sip4java.git</connection>
+        <developerConnection>scm:git:ssh://github.com:tammon/sip4java.git</developerConnection>
+        <url>http://github.com/tammon/sip4java/tree/master</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <build>
         <plugins>
@@ -56,12 +80,75 @@
             </plugin>
         </plugins>
     </build>
-    <dependencies>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.0.0-M3</version>
-        </dependency>
-    </dependencies>
 
-</project>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.7</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>2.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.9.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.5</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+        </build>
+    </profile>
+</profiles>
+
+
+<dependencies>
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter-api</artifactId>
+    <version>5.0.0-M3</version>
+</dependency>
+</dependencies>
+
+        </project>
