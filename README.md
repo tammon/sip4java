@@ -15,6 +15,25 @@ Coming soon:
 * ReadEverything
 * WriteData
 
+###Latest Release
+The latest release is `0.1.0` 
+
+Add sip4java using maven:
+
+```
+<dependency>
+    <groupId>net.tammon</groupId>
+    <artifactId>sip</artifactId>
+    <version>0.1.0</version>
+</dependency>
+ ```
+Add sip4java using gradle:
+```
+dependencies {
+  compile 'net.tammon:sip:0.1.0'
+}
+```
+
 ##License and Copyright
 **Sercos Internet Protocol (SIP) version 1 for Java**
 
