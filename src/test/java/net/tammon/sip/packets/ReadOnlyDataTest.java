@@ -23,29 +23,25 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets;
 
-public final class ReadOnlyDataBody extends AbstractBody implements RequestBody {
-    private static final int messageType = 71;
-    private final short slaveIndex;
-    private final short slaveExtension;
-    private final Idn idn;
+import org.junit.jupiter.api.Test;
 
-    public ReadOnlyDataBody(short slaveIndex, short slaveExtension, String idn) throws IllegalArgumentException{
-        this.slaveIndex = slaveIndex;
-        this.slaveExtension = slaveExtension;
-        this.idn = new Idn(idn);
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
+class ReadOnlyDataTest {
+
+    @Test
+    void getPacketBody() {
+        ReadOnlyData readOnlyData = new ReadOnlyData(2, (short)1, (short)0, "S-0-0100.1.0");
+        assertArrayEquals(new byte[]{0x2, 0x0, 0x0, 0x0, 0x47, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x64, 0x0, 0x0, 0x1},
+                readOnlyData.getTcpMsgAsByteArray());
+        readOnlyData = new ReadOnlyData(1, (short)1, (short)0, "S-0-0010");
+        assertArrayEquals(new byte[]{0x1, 0x0, 0x0, 0x0, 0x47, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0xA, 0x0, 0x0, 0x0},
+                readOnlyData.getTcpMsgAsByteArray());
+        readOnlyData = new ReadOnlyData(4, (short)1, (short)0, "P-1-0010");
+        assertArrayEquals(new byte[]{0x4, 0x0, 0x0, 0x0, 0x47, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0xA, (byte)0x90, 0x0, 0x0},
+                readOnlyData.getTcpMsgAsByteArray());
     }
 
-    @Override
-    public byte[] getDataAsByteArray() {
-        return Data.concatenate(
-                Data.getByteArray(this.slaveIndex, this.slaveExtension),
-                this.idn.getIdnAsByteArray());
-    }
-
-    @Override
-    public int getMessageType() {
-        return messageType;
-    }
 }
