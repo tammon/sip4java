@@ -220,4 +220,9 @@ public interface SipConnection {
      * @throws Exception if any communication or data handling problem occurs
      */
     double[] readDataAsDoubleArray(int slaveIndex, int slaveExtension, String idn) throws Exception;
+
+    /**
+     * Stops the keep alive loop and closes the socket connection to the sercos device
+     */
+    void disconnect();
 }
