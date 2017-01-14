@@ -486,6 +486,7 @@ public class TCPConnection implements SipConnection {
     /**
      * Stops the keep alive loop and closes the socket connection to the sercos device
      */
+    @Override
     public void disconnect(){
         try {
             this.keepAliveTimer.cancel();
