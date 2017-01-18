@@ -28,7 +28,7 @@ package net.tammon.sip.packets.parts;
 import java.io.DataInput;
 import java.io.IOException;
 
-public final class ConnectResponseBody extends AbstractBody implements ResponseBody {
+public final class ConnectResponseBody implements ResponseBody, Body {
 
     private static final int messageType = 64;
     private int sipVersion, busyTimeout, leaseTimeout, noSupportedMessageTypes;

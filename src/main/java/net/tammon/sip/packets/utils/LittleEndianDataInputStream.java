@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets.utils;
 
 import java.io.*;
 

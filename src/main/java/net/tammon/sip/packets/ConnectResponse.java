@@ -30,7 +30,7 @@ import net.tammon.sip.packets.parts.Head;
 
 import java.util.Arrays;
 
-public class ConnectResponse extends AbstractResponsePacket implements DynamicPacket {
+public class ConnectResponse extends ResponsePacket implements DynamicPacket {
 
     @Override
     public ConnectResponseBody getPacketBody() {

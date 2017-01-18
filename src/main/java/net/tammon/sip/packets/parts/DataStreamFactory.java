@@ -25,6 +25,9 @@
 
 package net.tammon.sip.packets.parts;
 
+import net.tammon.sip.packets.utils.LittleEndianDataInputStream;
+import net.tammon.sip.packets.utils.LittleEndianDataOutputStream;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataOutput;

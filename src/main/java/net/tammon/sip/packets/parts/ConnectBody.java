@@ -25,7 +25,7 @@
 
 package net.tammon.sip.packets.parts;
 
-public final class ConnectBody extends AbstractBody implements RequestBody {
+public final class ConnectBody implements RequestBody, Body {
 
     private static final int messageType = 63;
     private int sipVersion;

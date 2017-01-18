@@ -27,7 +27,7 @@ package net.tammon.sip.packets.parts;
 
 import java.io.DataInput;
 
-public final class ExceptionBody extends AbstractBody implements ResponseBody {
+public final class ExceptionBody implements ResponseBody, Body {
     private final static int messageType = 67;
     private short rawCommonErrorCode;
     private int specificErrorCode;

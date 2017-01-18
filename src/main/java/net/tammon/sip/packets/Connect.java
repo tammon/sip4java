@@ -28,7 +28,7 @@ package net.tammon.sip.packets;
 
 import net.tammon.sip.packets.parts.ConnectBody;
 
-public class Connect extends AbstractRequestPacket {
+public class Connect extends RequestPacket {
 
     public Connect(int transactionId, int sipVersion, int busyTimeout, int leaseTimeout) {
         super(transactionId, new ConnectBody(sipVersion, busyTimeout, leaseTimeout));

@@ -23,8 +23,15 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets;
 
-abstract class AbstractPart {
+import net.tammon.sip.packets.parts.ResponseBody;
 
+abstract class ResponsePacket extends AbstractPacket implements Response {
+    protected ResponseBody body;
+
+    public ResponsePacket(){
+        this.body = null;
+        this.head = null;
+    }
 }
