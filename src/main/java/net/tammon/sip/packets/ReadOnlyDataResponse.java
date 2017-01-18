@@ -30,7 +30,7 @@ import net.tammon.sip.packets.parts.ReadOnlyDataResponseBody;
 
 import java.util.Arrays;
 
-public class ReadOnlyDataResponse extends AbstractResponsePacket {
+public class ReadOnlyDataResponse extends ResponsePacket {
 
     @Override
     public void setData(byte[] rawData) throws Exception {

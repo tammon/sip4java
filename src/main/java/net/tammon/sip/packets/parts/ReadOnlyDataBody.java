@@ -25,7 +25,7 @@
 
 package net.tammon.sip.packets.parts;
 
-public final class ReadOnlyDataBody extends AbstractBody implements RequestBody {
+public final class ReadOnlyDataBody implements RequestBody, Body {
     private static final int messageType = 71;
     private final short slaveIndex;
     private final short slaveExtension;

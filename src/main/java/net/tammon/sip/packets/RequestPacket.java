@@ -25,13 +25,33 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.ResponseBody;
+import net.tammon.sip.packets.parts.Head;
+import net.tammon.sip.packets.parts.RequestBody;
 
-abstract class AbstractResponsePacket extends AbstractPacket implements Response {
-    protected ResponseBody body;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
-    public AbstractResponsePacket (){
-        this.body = null;
-        this.head = null;
+abstract class RequestPacket extends AbstractPacket implements Request{
+    protected RequestBody body;
+
+    public RequestPacket(int transactionId, RequestBody requestBody) {
+        this.head = new Head(transactionId, requestBody.getMessageType());
+        this.body = requestBody;
+    }
+
+    public RequestPacket(int transactionId, int messageType){
+        this.head = new Head(transactionId, messageType);
+    }
+
+    public byte[] getTcpMsgAsByteArray() {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            out.write(this.head.getDataAsByteArray());
+            out.write(this.body.getDataAsByteArray());
+            return out.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

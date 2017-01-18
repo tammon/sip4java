@@ -27,7 +27,7 @@ package net.tammon.sip.packets;
 
 import net.tammon.sip.packets.parts.Body;
 
-public class Ping extends AbstractRequestPacket {
+public class Ping extends RequestPacket {
     private final static int messageType = 65;
 
     public Ping(int transactionId) {

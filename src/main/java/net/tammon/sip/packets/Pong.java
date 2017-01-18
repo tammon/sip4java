@@ -28,7 +28,7 @@ package net.tammon.sip.packets;
 import net.tammon.sip.packets.parts.Body;
 import net.tammon.sip.packets.parts.Head;
 
-public class Pong extends AbstractResponsePacket {
+public class Pong extends ResponsePacket {
     private final static int messageType = 66;
 
     @Override

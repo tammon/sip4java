@@ -30,7 +30,7 @@ import net.tammon.sip.packets.parts.Head;
 
 import java.util.Arrays;
 
-public class ExceptionResponse extends AbstractResponsePacket {
+public class ExceptionResponse extends ResponsePacket {
 
     public ExceptionResponse(byte[] rawData) throws Exception {
         this.setData(rawData);

@@ -28,7 +28,7 @@ package net.tammon.sip.packets.parts;
 import java.io.DataInput;
 import java.io.IOException;
 
-public final class Head extends AbstractPart {
+public final class Head {
     private int transactionId;
     private int messageType;
 
