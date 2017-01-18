@@ -25,22 +25,12 @@
 
 package net.tammon.sip;
 
+import net.tammon.sip.packets.parts.Data;
+
 import java.net.InetAddress;
 import java.util.List;
 
 public interface SipConnection {
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     * It reads out the raw data of the response as raw data byte array.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    byte[] readDataAsRawByteArray(int slaveIndex, int slaveExtension, String idn) throws Exception;
 
     /**
      * Checks whether or not the TCP connection to the sercos slave is still connected
@@ -79,150 +69,9 @@ public interface SipConnection {
     List<Integer> getSupportedMessages();
 
     /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    String readDataAsString(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    byte readDataAsByte(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    short readDataAsShort(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    int readDataAsInt(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    long readDataAsLong(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    float readDataAsFloat(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    double readDataAsDouble(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    byte[] readDataAsByteArray(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    short[] readDataAsShortArray(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    int[] readDataAsIntArray(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    long[] readDataAsLongArray(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    float[] readDataAsFloatArray(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
-     * Sends a ReadOnlyDataRequest to the sercos device and handles the response.
-     *
-     * @param slaveIndex     the slave index of the sercos device (default: 0)
-     * @param slaveExtension the slave extentension of the sercos device (default: 0)
-     * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
-     * @return the data of the response in the specified format
-     * @throws Exception if any communication or data handling problem occurs
-     */
-    double[] readDataAsDoubleArray(int slaveIndex, int slaveExtension, String idn) throws Exception;
-
-    /**
      * Stops the keep alive loop and closes the socket connection to the sercos device
      */
     void disconnect();
+
+    Data readData(int slaveIndex, int slaveExtension, String idn) throws Exception;
 }

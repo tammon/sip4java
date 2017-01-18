@@ -202,7 +202,7 @@ public final class Data {
      * @throws IllegalTypeConversionException if the data has a type that is not compatible to the return type of this function
      * @throws IOException                    if a problem occurs while reading the raw data stream
      */
-    public long toLong() throws IllegalTypeConversionException, IOException {
+    public long asLong() throws IllegalTypeConversionException, IOException {
         if (this.dataAttribute.getJavaType().equals(byte.class)) return this.toByte();
         if (this.dataAttribute.getJavaType().equals(short.class)) return this.toShort();
         if (this.dataAttribute.getJavaType().equals(int.class)) return this.toInt();
@@ -222,7 +222,7 @@ public final class Data {
      * @throws IllegalTypeConversionException if the data has a type that is not compatible to the return type of this function
      * @throws IOException                    if a problem occurs while reading the raw data stream
      */
-    public float toFloat() throws IllegalTypeConversionException, TypeNotSupportedException, IOException {
+    public float asFloat() throws IllegalTypeConversionException, TypeNotSupportedException, IOException {
         if (this.dataAttribute.getJavaType().equals(float.class)) {
             switch (this.dataAttribute.getDataLength()) {
                 case oneByte:
@@ -255,8 +255,8 @@ public final class Data {
      * @throws IllegalTypeConversionException if the data has a type that is not compatible to the return type of this function
      * @throws IOException                    if a problem occurs while reading the raw data stream
      */
-    public double toDouble() throws IllegalTypeConversionException, IOException, TypeNotSupportedException {
-        if (this.dataAttribute.getJavaType().equals(float.class)) return this.toFloat();
+    public double asDouble() throws IllegalTypeConversionException, IOException, TypeNotSupportedException {
+        if (this.dataAttribute.getJavaType().equals(float.class)) return this.asFloat();
         if (this.dataAttribute.getJavaType().equals(double.class)) {
             if (this.dataAttribute.getDisplayFormat().equals(DataAttribute.DisplayFormat.Float))
                 throw new TypeNotSupportedException("Display format float is currently not supported");
@@ -286,7 +286,7 @@ public final class Data {
      * @return the converted data to byte array
      * @throws IllegalTypeConversionException if the data has a type that is not compatible to the return type of this function
      */
-    public byte[] toByteArray() throws IllegalTypeConversionException {
+    public byte[] asByteArray() throws IllegalTypeConversionException {
         if (this.dataAttribute.getJavaType().equals(byte[].class)) return rawData;
         throw new IllegalTypeConversionException(this.dataAttribute.getJavaType(), byte.class);
     }
@@ -306,7 +306,7 @@ public final class Data {
         throw new IllegalTypeConversionException(this.dataAttribute.getJavaType(), byte[][].class);
     }
 
-    public List<byte[]> toListOfBinaryArray() throws IllegalTypeConversionException {
+    public List<byte[]> asListOfBinaryArray() throws IllegalTypeConversionException {
         return Arrays.asList(this.toBinaryArray());
     }
 
@@ -317,7 +317,7 @@ public final class Data {
      * @throws IllegalTypeConversionException if the data has a type that is not compatible to the return type of this function
      * @throws IOException                    if a problem occurs while reading the raw data stream
      */
-    public short[] toShortArray() throws IllegalTypeConversionException, IOException {
+    public short[] asShortArray() throws IllegalTypeConversionException, IOException {
         if (this.dataAttribute.getJavaType().equals(short[].class)) return this.getDataAsShortArray();
         throw new IllegalTypeConversionException(this.dataAttribute.getJavaType(), short[].class);
     }
@@ -341,7 +341,7 @@ public final class Data {
      * @throws IllegalTypeConversionException if the data has a type that is not compatible to the return type of this function
      * @throws IOException                    if a problem occurs while reading the raw data stream
      */
-    public int[] toIntArray() throws IllegalTypeConversionException, IOException {
+    public int[] asIntArray() throws IllegalTypeConversionException, IOException {
         if (this.dataAttribute.getJavaType().equals(short[].class)) {
             short[] shortArray = this.getDataAsShortArray();
             int[] output = new int[shortArray.length];
@@ -371,7 +371,7 @@ public final class Data {
      * @throws IllegalTypeConversionException if the data has a type that is not compatible to the return type of this function
      * @throws IOException                    if a problem occurs while reading the raw data stream
      */
-    public long[] toLongArray() throws IllegalTypeConversionException, IOException {
+    public long[] asLongArray() throws IllegalTypeConversionException, IOException {
         if (this.dataAttribute.getJavaType().equals(short[].class)) {
             short[] shortArray = this.getDataAsShortArray();
             long[] output = new long[shortArray.length];
@@ -403,7 +403,7 @@ public final class Data {
      * @throws IllegalTypeConversionException if the data has a type that is not compatible to the return type of this function
      * @throws IOException                    if a problem occurs while reading the raw data stream
      */
-    public float[] toFloatArray() throws IllegalTypeConversionException, IOException, TypeNotSupportedException {
+    public float[] asFloatArray() throws IllegalTypeConversionException, IOException, TypeNotSupportedException {
         if (this.dataAttribute.getJavaType().equals(float[].class)) {
             switch (this.dataAttribute.getDataLength()) {
                 case oneByte:
@@ -445,9 +445,9 @@ public final class Data {
      * @throws IllegalTypeConversionException if the data has a type that is not compatible to the return type of this function
      * @throws IOException                    if a problem occurs while reading the raw data stream
      */
-    public double[] toDoubleArray() throws IllegalTypeConversionException, IOException, TypeNotSupportedException {
+    public double[] asDoubleArray() throws IllegalTypeConversionException, IOException, TypeNotSupportedException {
         if (this.dataAttribute.getJavaType().equals(float[].class))
-            return Data.convertToDoubleArray(this.toFloatArray());
+            return Data.convertToDoubleArray(this.asFloatArray());
         if (this.dataAttribute.getJavaType().equals(double[].class)) {
             if (this.dataAttribute.getDisplayFormat().equals(DataAttribute.DisplayFormat.Float))
                 throw new TypeNotSupportedException("Display format float is currently not supported");
@@ -484,7 +484,7 @@ public final class Data {
      *
      * @return the converted data to String array
      */
-    public String[] toStringArray() throws IOException {
+    public String[] asStringArray() throws IOException {
         DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData));
         String[] output = new String[this.rawData.length / 4];
         byte[] buffer = new byte[4];
@@ -502,39 +502,38 @@ public final class Data {
      *
      * @return the converted data to String
      */
-    @Override
-    public String toString() {
+    public String asString() {
         try {
             if (this.dataAttribute.getJavaType().equals(byte.class)) return Byte.toString(this.toByte());
             if (this.dataAttribute.getJavaType().equals(short.class)) return Short.toString(this.toShort());
             if (this.dataAttribute.getJavaType().equals(int.class)) return Integer.toString(this.toInt());
-            if (this.dataAttribute.getJavaType().equals(long.class)) return Long.toString(this.toLong());
-            if (this.dataAttribute.getJavaType().equals(float.class)) return Float.toString(this.toFloat());
-            if (this.dataAttribute.getJavaType().equals(double.class)) return Double.toString(this.toDouble());
+            if (this.dataAttribute.getJavaType().equals(long.class)) return Long.toString(this.asLong());
+            if (this.dataAttribute.getJavaType().equals(float.class)) return Float.toString(this.asFloat());
+            if (this.dataAttribute.getJavaType().equals(double.class)) return Double.toString(this.asDouble());
             if (this.dataAttribute.getJavaType().equals(byte[].class)) {
                 StringBuilder stringBuilder = new StringBuilder();
                 if (this.dataAttribute.getDisplayFormat().equals(DataAttribute.DisplayFormat.Binary)) {
                     stringBuilder.append("0b");
-                    for (byte bytes : this.toByteArray())
+                    for (byte bytes : this.asByteArray())
                         stringBuilder.insert(2, Data.addZerosIfNeeded(Integer.toBinaryString(bytes), 8));
                 } else if (this.dataAttribute.getDisplayFormat().equalsAny(DataAttribute.DisplayFormat.HexaDecimal)) {
                     stringBuilder.append("0x");
-                    for (byte bytes : this.toByteArray())
+                    for (byte bytes : this.asByteArray())
                         stringBuilder.insert(2, Integer.toHexString(bytes));
-                } else return Arrays.toString(this.toByteArray());
+                } else return Arrays.toString(this.asByteArray());
             }
             if (this.dataAttribute.getJavaType().equals(byte[][].class)) {
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append('[');
                 if (this.dataAttribute.getDisplayFormat().equals(DataAttribute.DisplayFormat.Binary)) {
-                    for (byte[] bytes : this.toListOfBinaryArray()) {
+                    for (byte[] bytes : this.asListOfBinaryArray()) {
                         stringBuilder.append("0b");
                         for (byte rawByte : bytes)
                             stringBuilder.append(Data.addZerosIfNeeded(Integer.toBinaryString(rawByte), 8));
                         stringBuilder.append(",");
                     }
                 } else if (this.dataAttribute.getDisplayFormat().equalsAny(DataAttribute.DisplayFormat.HexaDecimal)) {
-                    for (byte[] bytes : this.toListOfBinaryArray()) {
+                    for (byte[] bytes : this.asListOfBinaryArray()) {
                         stringBuilder.append("0x");
                         for (byte rawByte : bytes) stringBuilder.append(Integer.toHexString(rawByte));
                         stringBuilder.append(",");
@@ -543,12 +542,12 @@ public final class Data {
                 stringBuilder.deleteCharAt(stringBuilder.toString().length() - 1);
                 return stringBuilder.append(']').toString();
             }
-            if (this.dataAttribute.getJavaType().equals(short[].class)) return Arrays.toString(this.toShortArray());
-            if (this.dataAttribute.getJavaType().equals(int[].class)) return Arrays.toString(this.toIntArray());
-            if (this.dataAttribute.getJavaType().equals(long[].class)) return Arrays.toString(this.toLongArray());
-            if (this.dataAttribute.getJavaType().equals(float[].class)) return Arrays.toString(this.toFloatArray());
-            if (this.dataAttribute.getJavaType().equals(double[].class)) return Arrays.toString(this.toDoubleArray());
-            if (this.dataAttribute.getJavaType().equals(String[].class)) return Arrays.toString(this.toStringArray());
+            if (this.dataAttribute.getJavaType().equals(short[].class)) return Arrays.toString(this.asShortArray());
+            if (this.dataAttribute.getJavaType().equals(int[].class)) return Arrays.toString(this.asIntArray());
+            if (this.dataAttribute.getJavaType().equals(long[].class)) return Arrays.toString(this.asLongArray());
+            if (this.dataAttribute.getJavaType().equals(float[].class)) return Arrays.toString(this.asFloatArray());
+            if (this.dataAttribute.getJavaType().equals(double[].class)) return Arrays.toString(this.asDoubleArray());
+            if (this.dataAttribute.getJavaType().equals(String[].class)) return Arrays.toString(this.asStringArray());
             if (this.dataAttribute.getJavaType().equals(String.class)) {
                 DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData));
                 switch (this.dataAttribute.getDisplayFormat()) {

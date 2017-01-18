@@ -31,7 +31,7 @@
 
     <groupId>net.tammon</groupId>
     <artifactId>sip</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -138,17 +138,22 @@
                         </executions>
                     </plugin>
                 </plugins>
-        </build>
-    </profile>
-</profiles>
+            </build>
+        </profile>
+    </profiles>
 
 
-<dependencies>
-<dependency>
-    <groupId>org.junit.jupiter</groupId>
-    <artifactId>junit-jupiter-api</artifactId>
-    <version>5.0.0-M3</version>
-</dependency>
-</dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.0.0-M3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.15</version>
+        </dependency>
+    </dependencies>
 
-        </project>
+</project>
