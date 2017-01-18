@@ -27,12 +27,16 @@ Add sip4java using maven:
     <version>0.1.0</version>
 </dependency>
  ```
+ 
 Add sip4java using gradle:
+
 ```
 dependencies {
   compile 'net.tammon:sip:0.1.0'
 }
 ```
+
+You can use the latest nightly build with version `0.2.0-SNAPSHOT`
 
 ##License and Copyright
 **Sercos Internet Protocol (SIP) version 1 for Java**
