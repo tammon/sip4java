@@ -36,7 +36,7 @@ import static net.tammon.sip.packets.parts.DataAttribute.DisplayFormat.values;
 /**
  * The DataAttribute is send by the drive as a description to the sent data
  */
-final class DataAttribute {
+public final class DataAttribute {
     private final int weight;
     private final DataLength dataLength;
     private final boolean isList;
