@@ -42,6 +42,7 @@ public class ReadOnlyData extends AbstractPacket implements Request {
     @Override
     public byte[] getTcpMsgAsByteArray() {
         return Data.concatenate(
+                this.head.getDataAsByteArray(),
                 Data.getByteArray(this.slaveIndex, this.slaveExtension),
                 this.idn.getIdnAsByteArray());
     }
