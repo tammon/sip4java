@@ -26,10 +26,6 @@
 package net.tammon.sip.packets;
 
 import net.tammon.sip.exceptions.TypeNotSupportedException;
-import net.tammon.sip.packets.parts.Data;
-import net.tammon.sip.packets.parts.DataAttribute;
-import net.tammon.sip.packets.parts.DataStreamFactory;
-import net.tammon.sip.packets.parts.Head;
 
 import java.io.DataInput;
 import java.io.FilterInputStream;

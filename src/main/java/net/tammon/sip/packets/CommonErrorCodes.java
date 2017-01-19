@@ -25,13 +25,6 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.ResponseBody;
-
-abstract class ResponsePacket extends AbstractPacket implements Response {
-    protected ResponseBody body;
-
-    public ResponsePacket(){
-        this.body = null;
-        this.head = null;
-    }
+public enum CommonErrorCodes {
+    CONNECTION_ERROR, TIMEOUT, UNKNOWN_MESSAGE_TYPE, SERVICESPECIFIC, PDU_TOO_LARGE, PDU_PROTOCOL_MISMATCH
 }

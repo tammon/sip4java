@@ -25,7 +25,7 @@
 
 package net.tammon.sip;
 
-import net.tammon.sip.packets.parts.Data;
+import net.tammon.sip.packets.Data;
 
 import java.net.InetAddress;
 import java.util.List;

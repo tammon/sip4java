@@ -25,8 +25,6 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.Head;
-
 public class Ping extends AbstractPacket implements Request {
     private final static int messageType = 65;
 

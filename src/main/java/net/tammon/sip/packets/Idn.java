@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -33,7 +33,7 @@ import java.nio.ByteBuffer;
 /**
  * Holds a SIP Identifier for parameter access.
  */
-public final class Idn {
+final class Idn {
     private final byte[] eIdn;
     private final String idn;
 

@@ -25,9 +25,6 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.DataStreamFactory;
-import net.tammon.sip.packets.parts.Head;
-
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.Arrays;

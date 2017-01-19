@@ -25,10 +25,6 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.Data;
-import net.tammon.sip.packets.parts.Head;
-import net.tammon.sip.packets.parts.Idn;
-
 public class ReadOnlyData extends AbstractPacket implements Request {
 
     private static final int messageType = 71;
