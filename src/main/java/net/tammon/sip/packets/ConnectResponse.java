@@ -32,7 +32,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class ConnectResponse extends ResponsePacket implements DynamicPacket {
+public class ConnectResponse extends AbstractPacket implements Response {
 
     private static final int messageType = 64;
     private int sipVersion, busyTimeout, leaseTimeout, noSupportedMessageTypes;
