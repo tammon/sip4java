@@ -25,17 +25,42 @@
 
 package net.tammon.sip.packets;
 
+import net.tammon.sip.packets.parts.Data;
+import net.tammon.sip.packets.parts.Head;
 
-import net.tammon.sip.packets.parts.ConnectBody;
+public class Connect extends AbstractPacket implements Request {
 
-public class Connect extends RequestPacket {
+    private static final int messageType = 63;
+    private int sipVersion;
+    private int busyTimeOut;
+    private int leaseTimeout;
 
-    public Connect(int transactionId, int sipVersion, int busyTimeout, int leaseTimeout) {
-        super(transactionId, new ConnectBody(sipVersion, busyTimeout, leaseTimeout));
+    public Connect(int transactionId,int sipVersion, int busyTimeOut, int leaseTimeout) {
+        this.head = new Head(transactionId, messageType);
+        this.sipVersion = sipVersion;
+        this.busyTimeOut = busyTimeOut;
+        this.leaseTimeout = leaseTimeout;
     }
 
     @Override
-    public ConnectBody getPacketBody() {
-        return (ConnectBody) this.body;
+    public byte[] getTcpMsgAsByteArray() {
+        return Data.concatenate(this.head.getDataAsByteArray(), Data.getByteArray(this.sipVersion, this.busyTimeOut, this.leaseTimeout));
+    }
+
+    public int getSipVersion() {
+        return sipVersion;
+    }
+
+    public int getBusyTimeOut() {
+        return busyTimeOut;
+    }
+
+    public int getLeaseTimeout() {
+        return leaseTimeout;
+    }
+
+    @Override
+    public int getMessageType() {
+        return messageType;
     }
 }
