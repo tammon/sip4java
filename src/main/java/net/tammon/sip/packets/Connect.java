@@ -41,7 +41,8 @@ public class Connect extends AbstractPacket implements Request {
 
     @Override
     public byte[] getTcpMsgAsByteArray() {
-        return Data.concatenate(this.head.getDataAsByteArray(), Data.getByteArray(this.sipVersion, this.busyTimeOut, this.leaseTimeout));
+        return Data.concatenate(this.head.getDataAsByteArray(),
+                Data.getByteArray(this.sipVersion, this.busyTimeOut, this.leaseTimeout));
     }
 
     public int getSipVersion() {
