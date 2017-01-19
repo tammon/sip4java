@@ -25,26 +25,58 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.Head;
-import net.tammon.sip.packets.parts.ReadOnlyDataResponseBody;
+import net.tammon.sip.exceptions.TypeNotSupportedException;
 
+import java.io.DataInput;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InvalidClassException;
 import java.util.Arrays;
 
-public class ReadOnlyDataResponse extends ResponsePacket {
+public class ReadOnlyDataResponse extends AbstractPacket implements Response {
+
+    private final static int messageType = 72;
+    private Data data;
+
+    /**
+     * sets the data of this object's body
+     * @param rawBodyData the raw binary data of the response describing the body
+     * @throws IOException if an I/O error occurs on reading the binary data as DataStream
+     */
+    private void setBodyData(byte[] rawBodyData) throws IOException, TypeNotSupportedException {
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyData);
+        byte[] buffer = new byte[4];
+        if (data instanceof FilterInputStream)
+            ((FilterInputStream)data).read(buffer);
+        else throw new InvalidClassException("DataInputStream does not extend FilterInputStream. Grabbing data as byte array ist not possible!");
+        DataAttribute dataAttribute = new DataAttribute(buffer);
+
+        int lengthOfData = data.readInt();
+        byte[] rawData = new byte[lengthOfData];
+        ((FilterInputStream)data).read(rawData);
+        this.data = new Data(rawData, dataAttribute);
+    }
+
+    /**
+     * Gets the messageType of the message
+     * @return message Type
+     */
+    @Override
+    public int getMessageType() {
+        return messageType;
+    }
+
+    /**
+     * Gets the data as raw binary
+     * @return raw data as byte array
+     */
+    public Data getData() {
+        return this.data;
+    }
 
     @Override
     public void setData(byte[] rawData) throws Exception {
         this.head = new Head(rawData);
-        this.body = new ReadOnlyDataResponseBody(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
-    }
-
-    @Override
-    public int getMessageType() {
-        return ReadOnlyDataResponseBody.getMessageType();
-    }
-
-    @Override
-    public ReadOnlyDataResponseBody getPacketBody() {
-        return (ReadOnlyDataResponseBody) this.body;
+        this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
     }
 }

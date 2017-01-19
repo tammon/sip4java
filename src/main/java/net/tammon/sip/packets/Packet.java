@@ -25,11 +25,8 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.Body;
-import net.tammon.sip.packets.parts.Head;
-
 interface Packet {
-    Body getPacketBody();
     Head getPacketHead();
     int getTransactionId();
+    int getMessageType();
 }

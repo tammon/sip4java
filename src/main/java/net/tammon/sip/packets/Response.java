@@ -27,5 +27,4 @@ package net.tammon.sip.packets;
 
 public interface Response extends Packet {
     void setData(byte[] rawData) throws Exception;
-    int getMessageType();
 }

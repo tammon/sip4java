@@ -25,22 +25,16 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.Body;
-
-public class Ping extends RequestPacket {
+public class Ping extends AbstractPacket implements Request {
     private final static int messageType = 65;
 
     public Ping(int transactionId) {
-        super(transactionId, messageType);
-    }
-
-    public static int getMessageType() {
-        return messageType;
+        this.head = new Head(transactionId, messageType);
     }
 
     @Override
-    public Body getPacketBody() {
-        return null;
+    public int getMessageType() {
+        return messageType;
     }
 
     @Override

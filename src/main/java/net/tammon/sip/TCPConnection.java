@@ -26,9 +26,6 @@
 package net.tammon.sip;
 
 import net.tammon.sip.packets.*;
-import net.tammon.sip.packets.parts.CommonErrorCodes;
-import net.tammon.sip.packets.parts.Data;
-import net.tammon.sip.packets.parts.Head;
 
 import java.io.*;
 import java.net.*;
@@ -168,12 +165,12 @@ public class TCPConnection implements SipConnection {
         if (header.getMessageType() == 67) {
             this.refreshSocketConnection();
             ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
-            if (exceptionResponse.getPacketBody().getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
+            if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
                 throw new UnknownServiceException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
             throw new ProtocolException("Drive threw Communication Exception."
-                    + ((exceptionResponse.getPacketBody().getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
-                    ? (" SIP-SpecificErrorCode: " + exceptionResponse.getPacketBody().getSpecificErrorCode())
-                    : (" SIP-CommonErrorCode: " + exceptionResponse.getPacketBody().getCommonErrorCode())));
+                    + ((exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
+                    ? (" SIP-SpecificErrorCode: " + exceptionResponse.getSpecificErrorCode())
+                    : (" SIP-CommonErrorCode: " + exceptionResponse.getCommonErrorCode())));
         } else if (header.getMessageType() == response.getMessageType()) {
             response.setData(rawResponse);
         } else throw new Exception("Invalid Message Type Response");
@@ -188,7 +185,7 @@ public class TCPConnection implements SipConnection {
         Connect request = new Connect(this.getNewTransactionId(), this.sipVersion, this.busyTimeout, this.leaseTimeout);
         ConnectResponse response = new ConnectResponse();
         this.tcpSendAndReceive(request, response);
-        this.supportedMessages = IntStream.of(response.getPacketBody().getSupportedMessageTypes()).boxed().collect(Collectors.toList());
+        this.supportedMessages = IntStream.of(response.getSupportedMessageTypes()).boxed().collect(Collectors.toList());
         this.connected = true;
     }
 
@@ -225,7 +222,7 @@ public class TCPConnection implements SipConnection {
         ReadOnlyData request = new ReadOnlyData(this.getNewTransactionId(), (short) slaveIndex, (short) slaveExtension, idn);
         ReadOnlyDataResponse response = new ReadOnlyDataResponse();
         this.tcpSendAndReceive(request, response);
-        return response.getPacketBody().getData();
+        return response.getData();
     }
 
     /**

@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets;
 
 import net.tammon.sip.exceptions.IllegalTypeConversionException;
 import net.tammon.sip.exceptions.TypeNotSupportedException;
@@ -57,7 +57,7 @@ public final class Data {
      * @param numbers numbers to be converted
      * @return numbers as little endian byte array
      */
-    static byte[] getByteArray(Number... numbers) {
+    public static byte[] getByteArray(Number... numbers) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutput data = DataStreamFactory.getLittleEndianDataOutputStream(byteArrayOutputStream);
         try {
@@ -80,7 +80,7 @@ public final class Data {
      * @param inputByteArrays to be concatenated byte arrays
      * @return concatenated byte array
      */
-    static byte[] concatenate(byte[]... inputByteArrays) {
+    public static byte[] concatenate(byte[]... inputByteArrays) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             for (byte[] inputByteArray : inputByteArrays) {
@@ -99,7 +99,7 @@ public final class Data {
      * @param inputByteArrays to be concatenated bytes
      * @return concatenated byte array
      */
-    static byte[] concatenate(byte... inputByteArrays) {
+    public static byte[] concatenate(byte... inputByteArrays) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             for (byte inputByteArray : inputByteArrays) {

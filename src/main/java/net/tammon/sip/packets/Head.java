@@ -23,41 +23,47 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets;
 
-public final class ConnectBody implements RequestBody, Body {
+import java.io.DataInput;
+import java.io.IOException;
 
-    private static final int messageType = 63;
-    private int sipVersion;
-    private int busyTimeOut;
-    private int leaseTimeout;
+public final class Head {
+    private int transactionId;
+    private int messageType;
 
-    public ConnectBody(int sipVersion, int busyTimeOut, int leaseTimeout) {
-        this.sipVersion = sipVersion;
-        this.busyTimeOut = busyTimeOut;
-        this.leaseTimeout = leaseTimeout;
+    public Head(int transactionId, int messageType) {
+        this.transactionId = transactionId;
+        this.messageType = messageType;
     }
 
-    @Override
-    public byte[] getDataAsByteArray() {
-        return Data.getByteArray(this.sipVersion, this.busyTimeOut, this.leaseTimeout);
+    public Head(byte[] rawHeadData) throws IOException {
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawHeadData);
+        this.transactionId = data.readInt();
+        this.messageType = data.readInt();
     }
 
-    public int getSipVersion() {
-        return sipVersion;
+    public int getMsgLength() {
+        return this.getDataAsByteArray().length;
     }
 
-    public int getBusyTimeOut() {
-        return busyTimeOut;
+    public int getTransactionId() {
+        return transactionId;
     }
 
-    public int getLeaseTimeout() {
-        return leaseTimeout;
+    public void setTransactionId(int transactionId) {
+        this.transactionId = transactionId;
     }
 
-    @Override
     public int getMessageType() {
         return messageType;
     }
 
+    public void setMessageType(int messageType) {
+        this.messageType = messageType;
+    }
+
+    public byte[] getDataAsByteArray (){
+        return Data.getByteArray(this.transactionId, this.messageType);
+    }
 }

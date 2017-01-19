@@ -25,26 +25,62 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.ConnectResponseBody;
-import net.tammon.sip.packets.parts.Head;
-
+import java.io.DataInput;
+import java.io.IOException;
 import java.util.Arrays;
 
-public class ConnectResponse extends ResponsePacket implements DynamicPacket {
+public class ConnectResponse extends AbstractPacket implements Response {
 
-    @Override
-    public ConnectResponseBody getPacketBody() {
-        return (ConnectResponseBody) this.body;
-    }
-
-    @Override
-    public int getMessageType() {
-        return ConnectResponseBody.getMessageType();
-    }
+    private static final int messageType = 64;
+    private int sipVersion, busyTimeout, leaseTimeout, noSupportedMessageTypes;
+    private int[] supportedMessageTypes;
 
     @Override
     public void setData(byte[] rawData) throws Exception {
         this.head = new Head(rawData);
-        this.body = new ConnectResponseBody(Arrays.copyOfRange(rawData, head.getMsgLength(), rawData.length -1));
+        this.setBodyData(Arrays.copyOfRange(rawData, head.getMsgLength(), rawData.length - 1));
+    }
+
+    private void setBodyData(byte[] rawBodyData) throws IllegalArgumentException, IOException {
+
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyData);
+
+        this.sipVersion = data.readInt();
+        this.busyTimeout = data.readInt();
+        this.leaseTimeout = data.readInt();
+        this.noSupportedMessageTypes = data.readInt();
+        this.supportedMessageTypes = new int[noSupportedMessageTypes];
+        for (int i = 0; i < noSupportedMessageTypes; i++) {
+            try {
+                this.supportedMessageTypes[i] = data.readInt();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public int getMessageType() {
+        return messageType;
+    }
+
+    public int getSipVersion() {
+        return sipVersion;
+    }
+
+    public int getBusyTimeout() {
+        return busyTimeout;
+    }
+
+    public int getLeaseTimeout() {
+        return leaseTimeout;
+    }
+
+    public int getNoSupportedMessageTypes() {
+        return noSupportedMessageTypes;
+    }
+
+    public int[] getSupportedMessageTypes() {
+        return supportedMessageTypes;
     }
 }

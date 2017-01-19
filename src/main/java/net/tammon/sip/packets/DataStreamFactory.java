@@ -23,31 +23,22 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets;
 
+import net.tammon.sip.packets.utils.LittleEndianDataInputStream;
+import net.tammon.sip.packets.utils.LittleEndianDataOutputStream;
+
+import java.io.ByteArrayInputStream;
 import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.OutputStream;
 
-public final class ExceptionBody implements ResponseBody, Body {
-    private final static int messageType = 67;
-    private short rawCommonErrorCode;
-    private int specificErrorCode;
-    private CommonErrorCodes commonErrorCode;
-    public ExceptionBody(byte[] rawBodyDataArrays) throws Exception {
-        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyDataArrays);
-        this.rawCommonErrorCode = data.readShort();
-        this.specificErrorCode = data.readInt();
-        this.commonErrorCode = CommonErrorCodes.values()[this.rawCommonErrorCode-1];
+final class DataStreamFactory {
+    public static DataInput getLittleEndianDataInputStream(byte[] rawData){
+        return new LittleEndianDataInputStream(new ByteArrayInputStream(rawData));
     }
 
-    public static int getMessageType() {
-        return messageType;
-    }
-
-    public CommonErrorCodes getCommonErrorCode() {
-        return commonErrorCode;
-    }
-
-    public int getSpecificErrorCode() {
-        return specificErrorCode;
+    public static DataOutput getLittleEndianDataOutputStream(OutputStream outputStream){
+        return new LittleEndianDataOutputStream(outputStream);
     }
 }

@@ -25,30 +25,43 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.ExceptionBody;
-import net.tammon.sip.packets.parts.Head;
-
+import java.io.DataInput;
 import java.util.Arrays;
 
-public class ExceptionResponse extends ResponsePacket {
+public class ExceptionResponse extends AbstractPacket implements Response {
+
+    private final static int messageType = 67;
+    private short rawCommonErrorCode;
+    private int specificErrorCode;
+    private CommonErrorCodes commonErrorCode;
 
     public ExceptionResponse(byte[] rawData) throws Exception {
         this.setData(rawData);
     }
 
     @Override
-    public ExceptionBody getPacketBody() {
-        return (ExceptionBody) this.body;
+    public void setData(byte[] rawData) throws Exception {
+        this.head = new Head(rawData);
+        this.setBodyData(Arrays.copyOfRange(rawData, head.getMsgLength(), rawData.length - 1));
+    }
+
+    public void setBodyData(byte[] rawBodyDataArrays) throws Exception {
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyDataArrays);
+        this.rawCommonErrorCode = data.readShort();
+        this.specificErrorCode = data.readInt();
+        this.commonErrorCode = CommonErrorCodes.values()[this.rawCommonErrorCode - 1];
     }
 
     @Override
     public int getMessageType() {
-        return ExceptionBody.getMessageType();
+        return messageType;
     }
 
-    @Override
-    public void setData(byte[] rawData) throws Exception {
-        this.head = new Head(rawData);
-        this.body = new ExceptionBody(Arrays.copyOfRange(rawData, head.getMsgLength(), rawData.length -1));
+    public CommonErrorCodes getCommonErrorCode() {
+        return commonErrorCode;
+    }
+
+    public int getSpecificErrorCode() {
+        return specificErrorCode;
     }
 }
