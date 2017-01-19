@@ -25,17 +25,33 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.Body;
-import net.tammon.sip.packets.parts.ReadOnlyDataBody;
+import net.tammon.sip.packets.parts.Data;
+import net.tammon.sip.packets.parts.Head;
+import net.tammon.sip.packets.parts.Idn;
 
-public class ReadOnlyData extends RequestPacket {
+public class ReadOnlyData extends AbstractPacket implements Request {
+
+    private static final int messageType = 71;
+    private final short slaveIndex;
+    private final short slaveExtension;
+    private final Idn idn;
 
     public ReadOnlyData(int transactionId, short slaveIndex, short slaveExtension, String idn) throws IllegalArgumentException {
-        super(transactionId, new ReadOnlyDataBody(slaveIndex, slaveExtension, idn));
+        this.head = new Head(transactionId, messageType);
+        this.slaveIndex = slaveIndex;
+        this.slaveExtension = slaveExtension;
+        this.idn = new Idn(idn);
     }
 
     @Override
-    public Body getPacketBody() {
-        return this.body;
+    public byte[] getTcpMsgAsByteArray() {
+        return Data.concatenate(
+                Data.getByteArray(this.slaveIndex, this.slaveExtension),
+                this.idn.getIdnAsByteArray());
+    }
+
+    @Override
+    public int getMessageType() {
+        return messageType;
     }
 }
