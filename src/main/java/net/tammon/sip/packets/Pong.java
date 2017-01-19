@@ -25,16 +25,10 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.Body;
 import net.tammon.sip.packets.parts.Head;
 
-public class Pong extends ResponsePacket {
+public class Pong extends AbstractPacket implements Response {
     private final static int messageType = 66;
-
-    @Override
-    public Body getPacketBody() {
-        return null;
-    }
 
     @Override
     public int getMessageType() {
