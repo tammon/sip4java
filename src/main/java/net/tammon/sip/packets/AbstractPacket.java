@@ -25,8 +25,6 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.Head;
-
 abstract class AbstractPacket implements Packet {
     protected Head head;
 

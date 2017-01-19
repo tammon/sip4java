@@ -25,33 +25,20 @@
 
 package net.tammon.sip.packets;
 
-import net.tammon.sip.packets.parts.Head;
-import net.tammon.sip.packets.parts.RequestBody;
+import net.tammon.sip.packets.utils.LittleEndianDataInputStream;
+import net.tammon.sip.packets.utils.LittleEndianDataOutputStream;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.OutputStream;
 
-abstract class RequestPacket extends AbstractPacket implements Request{
-    protected RequestBody body;
-
-    public RequestPacket(int transactionId, RequestBody requestBody) {
-        this.head = new Head(transactionId, requestBody.getMessageType());
-        this.body = requestBody;
+final class DataStreamFactory {
+    public static DataInput getLittleEndianDataInputStream(byte[] rawData){
+        return new LittleEndianDataInputStream(new ByteArrayInputStream(rawData));
     }
 
-    public RequestPacket(int transactionId, int messageType){
-        this.head = new Head(transactionId, messageType);
-    }
-
-    public byte[] getTcpMsgAsByteArray() {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try {
-            out.write(this.head.getDataAsByteArray());
-            out.write(this.body.getDataAsByteArray());
-            return out.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public static DataOutput getLittleEndianDataOutputStream(OutputStream outputStream){
+        return new LittleEndianDataOutputStream(outputStream);
     }
 }

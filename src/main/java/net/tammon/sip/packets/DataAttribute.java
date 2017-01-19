@@ -23,15 +23,13 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets;
 
 import net.tammon.sip.exceptions.TypeNotSupportedException;
 
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.Date;
-
-import static net.tammon.sip.packets.parts.DataAttribute.DisplayFormat.values;
 
 /**
  * The DataAttribute is send by the drive as a description to the sent data
@@ -59,7 +57,7 @@ public final class DataAttribute {
         this.dataLength = DataLength.values()[(byteBuffer & 0x3)];
         this.isList = (byteBuffer & 0x4) == 0x4;
         this.isCommand = (byteBuffer & 0x8) == 0x8;
-        this.displayFormat = values()[(byteBuffer & 0x70) >> 0x4];
+        this.displayFormat = DisplayFormat.values()[(byteBuffer & 0x70) >> 0x4];
         byteBuffer = data.readByte();
         this.decimalPointPosition = (byte)(byteBuffer & 0xF);
         this.rights = (byte)((byteBuffer & 0xF0) >> 0x4);

@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets;
 
 import net.tammon.sip.exceptions.IllegalTypeConversionException;
 import net.tammon.sip.exceptions.TypeNotSupportedException;

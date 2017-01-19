@@ -23,8 +23,47 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets.parts;
+package net.tammon.sip.packets;
 
-public enum CommonErrorCodes {
-    CONNECTION_ERROR, TIMEOUT, UNKNOWN_MESSAGE_TYPE, SERVICESPECIFIC, PDU_TOO_LARGE, PDU_PROTOCOL_MISMATCH
+import java.io.DataInput;
+import java.io.IOException;
+
+public final class Head {
+    private int transactionId;
+    private int messageType;
+
+    public Head(int transactionId, int messageType) {
+        this.transactionId = transactionId;
+        this.messageType = messageType;
+    }
+
+    public Head(byte[] rawHeadData) throws IOException {
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawHeadData);
+        this.transactionId = data.readInt();
+        this.messageType = data.readInt();
+    }
+
+    public int getMsgLength() {
+        return this.getDataAsByteArray().length;
+    }
+
+    public int getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(int transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    public int getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(int messageType) {
+        this.messageType = messageType;
+    }
+
+    public byte[] getDataAsByteArray (){
+        return Data.getByteArray(this.transactionId, this.messageType);
+    }
 }
