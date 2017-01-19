@@ -33,7 +33,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.OutputStream;
 
-final class DataStreamFactory {
+public final class DataStreamFactory {
     public static DataInput getLittleEndianDataInputStream(byte[] rawData){
         return new LittleEndianDataInputStream(new ByteArrayInputStream(rawData));
     }
