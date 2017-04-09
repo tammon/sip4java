@@ -36,7 +36,7 @@ public class ConnectResponse extends AbstractPacket implements Response {
     private int[] supportedMessageTypes;
 
     @Override
-    public void setData(byte[] rawData) throws Exception {
+    public void setData(byte[] rawData) throws IOException {
         this.head = new Head(rawData);
         this.setBodyData(Arrays.copyOfRange(rawData, head.getMsgLength(), rawData.length - 1));
     }

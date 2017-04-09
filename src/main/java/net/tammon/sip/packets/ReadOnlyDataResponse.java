@@ -75,7 +75,7 @@ public class ReadOnlyDataResponse extends AbstractPacket implements Response {
     }
 
     @Override
-    public void setData(byte[] rawData) throws Exception {
+    public void setData(byte[] rawData) throws IOException {
         this.head = new Head(rawData);
         this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
     }

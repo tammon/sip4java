@@ -29,6 +29,7 @@ import java.io.DataInput;
 import java.io.IOException;
 
 public final class Head {
+    private static int MSG_EXCEPTION = 67;
     private int transactionId;
     private int messageType;
 
@@ -58,6 +59,8 @@ public final class Head {
     public int getMessageType() {
         return messageType;
     }
+
+
 
     public void setMessageType(int messageType) {
         this.messageType = messageType;

@@ -25,6 +25,10 @@
 
 package net.tammon.sip;
 
+import net.tammon.sip.exceptions.SipException;
+import net.tammon.sip.exceptions.SipInternalException;
+import net.tammon.sip.exceptions.SipServiceNotSupportedException;
+import net.tammon.sip.exceptions.SipSocketTimeoutException;
 import net.tammon.sip.packets.*;
 
 import java.io.*;
@@ -49,42 +53,47 @@ public class TCPConnection implements SipConnection {
 
     /**
      * Establishes a TCP connection to a sercos device with given IP Address
-     *
+     * <p>
      * This connection can have a keepAlive flag which will maintain the SIP connection even if no request gets sent
      * for a longer duration than the leaseTimeout. This will prevent the drive of closing the socket connection after
      * the lease timeout. If a keep alive is used it is mandatory to call the disconnect() method to stop the keep alive
      * functionality. If disconnect() is not called the tcp connection will prevent your program from exiting.
      *
-     * @param host domain name or IP Address of the drive
+     * @param host      domain name or IP Address of the drive
      * @param keepAlive flag if the connection should stay alive even if no request are sent
      * @throws Exception in case of communication problems
      */
-    public TCPConnection(String host, boolean keepAlive) throws Exception {
+    public TCPConnection(String host, boolean keepAlive) throws SipException {
+        try {
+            // Load Default Properties from properties file and initialize
+            InputStream inputStream = ClassLoader.getSystemResourceAsStream("sipDefault.properties");
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            this.ipAddress = InetAddress.getByName((host == null) ? properties.getProperty("driveIp") : host);
+            this.sipPort = new Integer(properties.getProperty("sipPort"));
+            this.leaseTimeout = new Integer(properties.getProperty("leaseTimeout"));
+            this.busyTimeout = new Integer(properties.getProperty("busyTimeout"));
+            this.maxDelay = new Integer(properties.getProperty("maxDelay"));
+            this.sipVersion = new Integer(properties.getProperty("sipVersion"));
 
-        // Load Default Properties from properties file and initialize
-        InputStream inputStream = ClassLoader.getSystemResourceAsStream("sipDefault.properties");
-        Properties properties = new Properties();
-        properties.load(inputStream);
-        this.sipPort = new Integer(properties.getProperty("sipPort"));
-        this.ipAddress = InetAddress.getByName((host == null) ? properties.getProperty("driveIp") : host);
-        this.leaseTimeout = new Integer(properties.getProperty("leaseTimeout"));
-        this.busyTimeout = new Integer(properties.getProperty("busyTimeout"));
-        this.maxDelay = new Integer(properties.getProperty("maxDelay"));
-        this.sipVersion = new Integer(properties.getProperty("sipVersion"));
-
-        // Create new Socket Connection
-        this.refreshSocketConnection();
-        this.connectSip();
-        if(keepAlive) this.restartKeepAliveTimer();
+            // Create new Socket Connection
+            this.refreshSocketConnection();
+            this.connectSip();
+            if (keepAlive) this.restartKeepAliveTimer();
+        } catch (UnknownHostException whe) {
+            throw new SipException("Cannot resolve hostname. This is probably due to a misspelled hostname or bad dns configuration of host", whe);
+        } catch (IOException e) {
+            throw new SipInternalException("A problem occurred while trying to start Sip TCP Connection", e);
+        }
     }
 
     /**
      * Establishes a TCP connection to a sercos device with the standard IP address of an IndraDrive (192.168.0.1)
      * This connection has no keepAlive and will timeout if no input request comes in for longer then the standard leaseTimeout of 10s
      *
-     * @throws Exception in case of communication problems
+     * @throws SipException in case of communication problems
      */
-    public TCPConnection() throws Exception {
+    public TCPConnection() throws SipException {
         this(null, false);
     }
 
@@ -95,7 +104,7 @@ public class TCPConnection implements SipConnection {
      * @param host domain name or IP Address of the drive
      * @throws Exception in case of communication problems
      */
-    public TCPConnection(String host) throws Exception {
+    public TCPConnection(String host) throws SipException {
         this(host, false);
     }
 
@@ -103,9 +112,10 @@ public class TCPConnection implements SipConnection {
      * Establishes a new sip connection by reconnecting the socket and the sercos device.
      * Resets the list of supported messages
      *
-     * @throws Exception in case of communication problems
+     * @throws SocketTimeoutException in case of a socket timeout
+     * @throws SipInternalException in case of any not foreseen exception occurs
      */
-    private synchronized void refreshSocketConnection() throws Exception {
+    private synchronized void refreshSocketConnection() throws SipSocketTimeoutException {
         this.transactionId = 0;
         this.socketConnection = new Socket();
         try {
@@ -114,7 +124,9 @@ public class TCPConnection implements SipConnection {
             this.dataInputStream = new DataInputStream(this.socketConnection.getInputStream());
             this.supportedMessages = null;
         } catch (SocketTimeoutException e) {
-            throw new SocketTimeoutException("Drive does not respond to socket request. Probably wrong IP or not on network...");
+            throw new SipSocketTimeoutException("Drive does not respond to socket request. Probably wrong IP or not on network...");
+        } catch (IOException e) {
+            throw new SipInternalException("An internal S/IP Exception occured", e);
         }
     }
 
@@ -135,13 +147,17 @@ public class TCPConnection implements SipConnection {
      * @param request  sip request tcp packet
      * @param response sip response tcp packet type (generally empty initialized object)
      * @return sip response tcp packet of the given type with the packet data set to the object
-     * @throws Exception in case of communication problems
+     * @throws SipException in case of communication problems
      */
-    private synchronized void tcpSendAndReceive(Request request, Response response) throws Exception {
+    private synchronized void tcpSendAndReceive(Request request, Response response) throws IOException {
         if (!Objects.isNull(this.supportedMessages)
                 && !this.supportedMessages.contains(request.getPacketHead().getMessageType()))
-            throw new UnknownServiceException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages");
-        else this.dataOutputStream.write(request.getTcpMsgAsByteArray());
+            throw new SipServiceNotSupportedException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages");
+        else try {
+            this.dataOutputStream.write(request.getTcpMsgAsByteArray());
+        } catch (IOException e) {
+            throw new SipInternalException("Cannot write output stream data to S/IP device", e);
+        }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -153,27 +169,28 @@ public class TCPConnection implements SipConnection {
         } while (readLength >= 1024);
 
         byte[] rawResponse = outputStream.toByteArray();
-        Head header = new Head(rawResponse);
-
+        Head header = null;
+        header = new Head(rawResponse);
         // Check if we got the right response to our request
-        if (header.getTransactionId() != request.getTransactionId()) throw new Exception("The response transaction ID "
-                + header.getTransactionId()
-                + " doesn't match the request transaction ID "
-                + request.getTransactionId());
+        if (header.getTransactionId() != request.getTransactionId())
+            throw new SipException("The response transaction ID "
+                    + header.getTransactionId()
+                    + " doesn't match the request transaction ID "
+                    + request.getTransactionId());
 
         // Check if Drive threw an communication exception
         if (header.getMessageType() == 67) {
             this.refreshSocketConnection();
             ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
             if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
-                throw new UnknownServiceException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
-            throw new ProtocolException("Drive threw Communication Exception."
+                throw new SipServiceNotSupportedException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
+            throw new SipException("Drive threw Communication Exception."
                     + ((exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
                     ? (" SIP-SpecificErrorCode: " + exceptionResponse.getSpecificErrorCode())
                     : (" SIP-CommonErrorCode: " + exceptionResponse.getCommonErrorCode())));
         } else if (header.getMessageType() == response.getMessageType()) {
             response.setData(rawResponse);
-        } else throw new Exception("Invalid Message Type Response");
+        } else throw new SipInternalException("Invalid Message Type Response");
     }
 
     /**
@@ -181,10 +198,15 @@ public class TCPConnection implements SipConnection {
      *
      * @throws Exception in case of communication problems
      */
-    private void connectSip() throws Exception {
+    private void connectSip() {
         Connect request = new Connect(this.getNewTransactionId(), this.sipVersion, this.busyTimeout, this.leaseTimeout);
         ConnectResponse response = new ConnectResponse();
-        this.tcpSendAndReceive(request, response);
+        // todo: Remove statement by more meaningful exception
+        try {
+            this.tcpSendAndReceive(request, response);
+        } catch (IOException e) {
+            throw new SipException("communication problem", e);
+        }
         this.supportedMessages = IntStream.of(response.getSupportedMessageTypes()).boxed().collect(Collectors.toList());
         this.connected = true;
     }
@@ -276,7 +298,7 @@ public class TCPConnection implements SipConnection {
         return sipVersion;
     }
 
-    private void restartKeepAliveTimer(){
+    private void restartKeepAliveTimer() {
         this.keepAliveTimer = new Timer();
         final TimerTask timerTask = new TimerTask() {
             @Override
@@ -291,12 +313,12 @@ public class TCPConnection implements SipConnection {
      * Stops the keep alive loop and closes the socket connection to the sercos device
      */
     @Override
-    public void disconnect(){
+    public void disconnect() {
         try {
             this.keepAliveTimer.cancel();
             this.keepAliveTimer.purge();
             this.socketConnection.close();
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

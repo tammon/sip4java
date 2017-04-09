@@ -25,7 +25,7 @@
 
 package net.tammon.sip.exceptions;
 
-public class TypeNotSupportedException extends Exception {
+public class TypeNotSupportedException extends SipException {
     public TypeNotSupportedException() {
     }
 

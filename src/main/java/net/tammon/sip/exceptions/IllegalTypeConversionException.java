@@ -25,7 +25,7 @@
 
 package net.tammon.sip.exceptions;
 
-public class IllegalTypeConversionException extends RuntimeException {
+public class IllegalTypeConversionException extends SipException {
     public IllegalTypeConversionException() {
     }
 

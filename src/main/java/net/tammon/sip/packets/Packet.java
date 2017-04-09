@@ -26,6 +26,7 @@
 package net.tammon.sip.packets;
 
 interface Packet {
+
     Head getPacketHead();
     int getTransactionId();
     int getMessageType();

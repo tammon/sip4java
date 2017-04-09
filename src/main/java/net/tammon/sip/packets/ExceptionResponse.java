@@ -26,6 +26,7 @@
 package net.tammon.sip.packets;
 
 import java.io.DataInput;
+import java.io.IOException;
 import java.util.Arrays;
 
 public class ExceptionResponse extends AbstractPacket implements Response {
@@ -35,17 +36,17 @@ public class ExceptionResponse extends AbstractPacket implements Response {
     private int specificErrorCode;
     private CommonErrorCodes commonErrorCode;
 
-    public ExceptionResponse(byte[] rawData) throws Exception {
+    public ExceptionResponse(byte[] rawData) throws IOException {
         this.setData(rawData);
     }
 
     @Override
-    public void setData(byte[] rawData) throws Exception {
+    public void setData(byte[] rawData) throws IOException {
         this.head = new Head(rawData);
         this.setBodyData(Arrays.copyOfRange(rawData, head.getMsgLength(), rawData.length - 1));
     }
 
-    public void setBodyData(byte[] rawBodyDataArrays) throws Exception {
+    public void setBodyData(byte[] rawBodyDataArrays) throws IOException {
         DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawBodyDataArrays);
         this.rawCommonErrorCode = data.readShort();
         this.specificErrorCode = data.readInt();
