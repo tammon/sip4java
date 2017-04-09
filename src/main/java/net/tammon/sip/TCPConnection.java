@@ -61,30 +61,27 @@ public class TCPConnection implements SipConnection {
      *
      * @param host      domain name or IP Address of the drive
      * @param keepAlive flag if the connection should stay alive even if no request are sent
-     * @throws Exception in case of communication problems
+     * @throws SipException in case of communication problems
      */
-    public TCPConnection(String host, boolean keepAlive) throws SipException {
-        try {
-            // Load Default Properties from properties file and initialize
-            InputStream inputStream = ClassLoader.getSystemResourceAsStream("sipDefault.properties");
-            Properties properties = new Properties();
-            properties.load(inputStream);
-            this.ipAddress = InetAddress.getByName((host == null) ? properties.getProperty("driveIp") : host);
-            this.sipPort = new Integer(properties.getProperty("sipPort"));
-            this.leaseTimeout = new Integer(properties.getProperty("leaseTimeout"));
-            this.busyTimeout = new Integer(properties.getProperty("busyTimeout"));
-            this.maxDelay = new Integer(properties.getProperty("maxDelay"));
-            this.sipVersion = new Integer(properties.getProperty("sipVersion"));
+    public TCPConnection(String host, boolean keepAlive) {
+        Properties properties = getDefaultProperties();
 
-            // Create new Socket Connection
-            this.refreshSocketConnection();
-            this.connectSip();
-            if (keepAlive) this.restartKeepAliveTimer();
-        } catch (UnknownHostException whe) {
-            throw new SipException("Cannot resolve hostname. This is probably due to a misspelled hostname or bad dns configuration of host", whe);
-        } catch (IOException e) {
-            throw new SipInternalException("A problem occurred while trying to start Sip TCP Connection", e);
+        try {
+            this.ipAddress = InetAddress.getByName((host == null) ? properties.getProperty("driveIp") : host);
+        } catch (UnknownHostException e) {
+            throw new SipException("Cannot resolve hostname. This is probably due to a misspelled hostname or bad dns configuration of host", e);
         }
+
+        this.sipPort = new Integer(properties.getProperty("sipPort"));
+        this.leaseTimeout = new Integer(properties.getProperty("leaseTimeout"));
+        this.busyTimeout = new Integer(properties.getProperty("busyTimeout"));
+        this.maxDelay = new Integer(properties.getProperty("maxDelay"));
+        this.sipVersion = new Integer(properties.getProperty("sipVersion"));
+
+        this.connectSocket();
+        this.connectSip();
+
+        if (keepAlive) this.restartKeepAliveTimer();
     }
 
     /**
@@ -93,7 +90,7 @@ public class TCPConnection implements SipConnection {
      *
      * @throws SipException in case of communication problems
      */
-    public TCPConnection() throws SipException {
+    public TCPConnection() {
         this(null, false);
     }
 
@@ -104,18 +101,32 @@ public class TCPConnection implements SipConnection {
      * @param host domain name or IP Address of the drive
      * @throws Exception in case of communication problems
      */
-    public TCPConnection(String host) throws SipException {
+    public TCPConnection(String host) {
         this(host, false);
+    }
+
+    /**
+     *
+     * @return sipDefault properties file as {@link Properties} Object
+     */
+    private Properties getDefaultProperties() {
+        InputStream inputStream = ClassLoader.getSystemResourceAsStream("sipDefault.properties");
+        Properties properties = new Properties();
+        try {
+            properties.load(inputStream);
+        } catch (IOException e) {
+            throw new SipInternalException("Problem occurred while trying to load sipDefault.properties", e);
+        }
+        return properties;
     }
 
     /**
      * Establishes a new sip connection by reconnecting the socket and the sercos device.
      * Resets the list of supported messages
      *
-     * @throws SocketTimeoutException in case of a socket timeout
-     * @throws SipInternalException in case of any not foreseen exception occurs
+     * @throws SipSocketTimeoutException in case of a socket timeout
      */
-    private synchronized void refreshSocketConnection() throws SipSocketTimeoutException {
+    private synchronized void connectSocket() throws SipSocketTimeoutException {
         this.transactionId = 0;
         this.socketConnection = new Socket();
         try {
@@ -180,7 +191,7 @@ public class TCPConnection implements SipConnection {
 
         // Check if Drive threw an communication exception
         if (header.getMessageType() == 67) {
-            this.refreshSocketConnection();
+            this.connectSocket();
             ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
             if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
                 throw new SipServiceNotSupportedException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
