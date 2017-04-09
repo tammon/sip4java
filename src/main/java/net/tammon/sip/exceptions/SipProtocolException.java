@@ -23,10 +23,26 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets;
+package net.tammon.sip.exceptions;
 
-import java.io.IOException;
+public class SipProtocolException extends SipException {
+    public SipProtocolException() {
+        super();
+    }
 
-public interface Response extends Packet {
-    void setData(byte[] rawData) throws IOException;
+    public SipProtocolException(String message) {
+        super(message);
+    }
+
+    public SipProtocolException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SipProtocolException(Throwable cause) {
+        super(cause);
+    }
+
+    protected SipProtocolException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

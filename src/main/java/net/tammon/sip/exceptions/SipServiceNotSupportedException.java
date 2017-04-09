@@ -23,10 +23,22 @@
  * SOFTWARE.
  */
 
-package net.tammon.sip.packets;
+package net.tammon.sip.exceptions;
 
-import java.io.IOException;
+public class SipServiceNotSupportedException extends SipException {
+    public SipServiceNotSupportedException(String message) {
+        super(message);
+    }
 
-public interface Response extends Packet {
-    void setData(byte[] rawData) throws IOException;
+    public SipServiceNotSupportedException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SipServiceNotSupportedException(Throwable cause) {
+        super(cause);
+    }
+
+    protected SipServiceNotSupportedException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

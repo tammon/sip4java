@@ -25,6 +25,8 @@
 
 package net.tammon.sip.packets;
 
+import java.io.IOException;
+
 public class Pong extends AbstractPacket implements Response {
     private final static int messageType = 66;
 
@@ -34,7 +36,7 @@ public class Pong extends AbstractPacket implements Response {
     }
 
     @Override
-    public void setData(byte[] rawData) throws Exception {
+    public void setData(byte[] rawData) throws IOException {
         this.head = new Head(rawData);
     }
 }
