@@ -108,7 +108,6 @@ public class TCPConnection implements SipConnection {
     }
 
     /**
-     *
      * @return sipDefault properties file as {@link Properties} Object
      */
     private Properties getDefaultProperties() {
@@ -163,18 +162,26 @@ public class TCPConnection implements SipConnection {
      * @throws SipException in case of communication problems
      */
     private synchronized Response getTcpResponse(Request request, Class response) throws SipException {
-        if (this.isSupported(request.getMessageType())) throw new SipServiceNotSupportedException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages");
+        if (this.isSupported(request.getMessageType()))
+            throw new SipServiceNotSupportedException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages");
 
         sendDataToServer(request.getTcpMsgAsByteArray());
 
-        try {
-            byte[] rawResponse = getRawResponseFromSocket();
-            return getResponse(rawResponse, request, response);
-        } catch (IOException e) {
-            throw new SipCommunicationException("Problem occurred during client communication", e);
-        }
+        byte[] rawResponse = getRawResponseFromSocket();
+        return getResponse(rawResponse, request, response);
     }
 
+    /**
+     * Returns an instantiated object of specified response class with the data of the raw response.
+     * In addition to that this method checks if the data is valid and matches the request.
+     *
+     * @param rawResponse   raw data from socket
+     * @param request       the request object that belongs to the response
+     * @param responseClass specifies the response class which will be used as instantiated object for return type
+     * @return response with data from type responseClass
+     * @throws SipProtocolException            in case the sercos device threw an communication exception (e.g. invalid request) or in case of a wrong transaction id
+     * @throws SipServiceNotSupportedException in case the sercos device does not support the requested message type
+     */
     private Response getResponse(byte[] rawResponse, Request request, Class responseClass) throws SipProtocolException, SipServiceNotSupportedException {
         try {
             Response response = (Response) responseClass.newInstance();
@@ -209,27 +216,47 @@ public class TCPConnection implements SipConnection {
         }
     }
 
-    private byte[] getRawResponseFromSocket() throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    /**
+     * Reads the data from the open Socket
+     *
+     * @return the raw data of the socket as byte array
+     * @throws SipCommunicationException in case of any problem occurs during socket communication
+     */
+    private byte[] getRawResponseFromSocket() throws SipCommunicationException {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int readLength;
+            do {
+                readLength = dataInputStream.read(buffer);
+                outputStream.write(buffer, 0, readLength + 1);
+            } while (readLength >= 1024);
 
-        byte[] buffer = new byte[1024];
-        int readLength;
-        do {
-            readLength = dataInputStream.read(buffer);
-            outputStream.write(buffer, 0, readLength + 1);
-        } while (readLength >= 1024);
-
-        return outputStream.toByteArray();
-    }
-
-    private void sendDataToServer(byte[] data) {
-        try {
-            this.dataOutputStream.write(data);
+            return outputStream.toByteArray();
         } catch (IOException e) {
-            throw new SipInternalException("Cannot write output stream data to S/IP device", e);
+            throw new SipCommunicationException("Cannot read from Socket", e);
         }
     }
 
+    /**
+     * sends a byte array via the open socket of this Sip connection
+     *
+     * @param data the raw data to send
+     * @throws SipCommunicationException in case of any problem occurs during socket communication
+     */
+    private void sendDataToServer(byte[] data) throws SipCommunicationException {
+        try {
+            this.dataOutputStream.write(data);
+        } catch (IOException e) {
+            throw new SipCommunicationException("Cannot write output stream data to S/IP device", e);
+        }
+    }
+
+    /**
+     * checks whether a message type is supported by the connected S/IP device
+     *
+     * @param messageType message type to check
+     * @return message type supported
+     */
     private boolean isSupported(int messageType) {
         return !Objects.isNull(this.supportedMessages)
                 && !this.supportedMessages.contains(messageType);
@@ -238,7 +265,7 @@ public class TCPConnection implements SipConnection {
     /**
      * This method sends a sip connection request to the sercos device and handles the incoming response
      *
-     * @throws Exception in case of communication problems
+     * @throws SipException in case of communication problems
      */
     private void connectSip() throws SipException {
         Connect request = new Connect(this.getNewTransactionId(), this.sipVersion, this.busyTimeout, this.leaseTimeout);
