@@ -25,24 +25,23 @@
 
 package net.tammon.sip.exceptions;
 
-public class SipInternalException extends SipRuntimeException {
-    public SipInternalException() {
-        super();
+public class SipCommunicationException extends SipException {
+    public SipCommunicationException() {
     }
 
-    public SipInternalException(String message) {
+    public SipCommunicationException(String message) {
         super(message);
     }
 
-    public SipInternalException(String message, Throwable cause) {
+    public SipCommunicationException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public SipInternalException(Throwable cause) {
+    public SipCommunicationException(Throwable cause) {
         super(cause);
     }
 
-    protected SipInternalException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public SipCommunicationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

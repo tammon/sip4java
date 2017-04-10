@@ -25,7 +25,7 @@
 
 package net.tammon.sip.exceptions;
 
-public class SipException extends RuntimeException {
+public class SipException extends Exception {
     public SipException() {
         super();
     }

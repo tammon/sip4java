@@ -25,10 +25,7 @@
 
 package net.tammon.sip;
 
-import net.tammon.sip.exceptions.SipException;
-import net.tammon.sip.exceptions.SipInternalException;
-import net.tammon.sip.exceptions.SipServiceNotSupportedException;
-import net.tammon.sip.exceptions.SipSocketTimeoutException;
+import net.tammon.sip.exceptions.*;
 import net.tammon.sip.packets.*;
 
 import java.io.*;
@@ -63,13 +60,13 @@ public class TCPConnection implements SipConnection {
      * @param keepAlive flag if the connection should stay alive even if no request are sent
      * @throws SipException in case of communication problems
      */
-    public TCPConnection(String host, boolean keepAlive) {
+    public TCPConnection(String host, boolean keepAlive) throws SipException {
         Properties properties = getDefaultProperties();
 
         try {
             this.ipAddress = InetAddress.getByName((host == null) ? properties.getProperty("driveIp") : host);
         } catch (UnknownHostException e) {
-            throw new SipException("Cannot resolve hostname. This is probably due to a misspelled hostname or bad dns configuration of host", e);
+            throw new SipInternalException("Cannot resolve hostname. This is probably due to a misspelled hostname or bad dns configuration of host", e);
         }
 
         this.sipPort = new Integer(properties.getProperty("sipPort"));
@@ -90,7 +87,7 @@ public class TCPConnection implements SipConnection {
      *
      * @throws SipException in case of communication problems
      */
-    public TCPConnection() {
+    public TCPConnection() throws SipException {
         this(null, false);
     }
 
@@ -101,7 +98,7 @@ public class TCPConnection implements SipConnection {
      * @param host domain name or IP Address of the drive
      * @throws Exception in case of communication problems
      */
-    public TCPConnection(String host) {
+    public TCPConnection(String host) throws SipException {
         this(host, false);
     }
 
@@ -160,16 +157,55 @@ public class TCPConnection implements SipConnection {
      * @return sip response tcp packet of the given type with the packet data set to the object
      * @throws SipException in case of communication problems
      */
-    private synchronized void tcpSendAndReceive(Request request, Response response) throws IOException {
-        if (!Objects.isNull(this.supportedMessages)
-                && !this.supportedMessages.contains(request.getPacketHead().getMessageType()))
-            throw new SipServiceNotSupportedException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages");
-        else try {
-            this.dataOutputStream.write(request.getTcpMsgAsByteArray());
-        } catch (IOException e) {
-            throw new SipInternalException("Cannot write output stream data to S/IP device", e);
-        }
+    private synchronized Response getTcpResponse(Request request, Class response) throws SipException {
+        if (this.isSupported(request.getMessageType())) throw new SipServiceNotSupportedException("The requested operation " + request.getClass().getSimpleName() + " is not in the drive's list of supported messages");
 
+        sendDataToServer(request.getTcpMsgAsByteArray());
+
+        try {
+            byte[] rawResponse = getRawResponseFromSocket();
+            return getResponse(rawResponse, request, response);
+        } catch (IOException e) {
+            throw new SipCommunicationException("Problem occurred during client communication", e);
+        }
+    }
+
+    private Response getResponse(byte[] rawResponse, Request request, Class responseClass) throws SipProtocolException, SipServiceNotSupportedException {
+        try {
+            Response response = (Response) responseClass.newInstance();
+
+            Head header = new Head(rawResponse);
+
+            // Check if we got the right response to our request
+            if (header.getTransactionId() != request.getTransactionId())
+                throw new SipProtocolException("The response transaction ID "
+                        + response.getPacketHead().getTransactionId()
+                        + " doesn't match the request transaction ID "
+                        + request.getTransactionId());
+
+            // Check if Drive threw an communication exception
+            if (header.getMessageType() == 67) {
+                ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
+                if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
+                    throw new SipServiceNotSupportedException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
+                throw new SipProtocolException("Drive threw Communication Exception."
+                        + ((exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
+                        ? (" SIP-SpecificErrorCode: " + exceptionResponse.getSpecificErrorCode())
+                        : (" SIP-CommonErrorCode: " + exceptionResponse.getCommonErrorCode())));
+            }
+
+            if (header.getMessageType() == response.getMessageType()) response.setData(rawResponse);
+            else throw new SipInternalException("Invalid Message Type Response");
+
+            return response;
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new SipInternalException("Invalid Response Class Type. Cannot instantiate object.", e);
+        } catch (IOException e) {
+            throw new SipInternalException("An internal error occurred during conversion of raw data to response object", e);
+        }
+    }
+
+    private byte[] getRawResponseFromSocket() throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         byte[] buffer = new byte[1024];
@@ -179,29 +215,20 @@ public class TCPConnection implements SipConnection {
             outputStream.write(buffer, 0, readLength + 1);
         } while (readLength >= 1024);
 
-        byte[] rawResponse = outputStream.toByteArray();
-        Head header = null;
-        header = new Head(rawResponse);
-        // Check if we got the right response to our request
-        if (header.getTransactionId() != request.getTransactionId())
-            throw new SipException("The response transaction ID "
-                    + header.getTransactionId()
-                    + " doesn't match the request transaction ID "
-                    + request.getTransactionId());
+        return outputStream.toByteArray();
+    }
 
-        // Check if Drive threw an communication exception
-        if (header.getMessageType() == 67) {
-            this.connectSocket();
-            ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
-            if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
-                throw new SipServiceNotSupportedException("Message type not supported: Drive does not support the requested operation " + request.getClass().getSimpleName());
-            throw new SipException("Drive threw Communication Exception."
-                    + ((exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
-                    ? (" SIP-SpecificErrorCode: " + exceptionResponse.getSpecificErrorCode())
-                    : (" SIP-CommonErrorCode: " + exceptionResponse.getCommonErrorCode())));
-        } else if (header.getMessageType() == response.getMessageType()) {
-            response.setData(rawResponse);
-        } else throw new SipInternalException("Invalid Message Type Response");
+    private void sendDataToServer(byte[] data) {
+        try {
+            this.dataOutputStream.write(data);
+        } catch (IOException e) {
+            throw new SipInternalException("Cannot write output stream data to S/IP device", e);
+        }
+    }
+
+    private boolean isSupported(int messageType) {
+        return !Objects.isNull(this.supportedMessages)
+                && !this.supportedMessages.contains(messageType);
     }
 
     /**
@@ -209,15 +236,9 @@ public class TCPConnection implements SipConnection {
      *
      * @throws Exception in case of communication problems
      */
-    private void connectSip() {
+    private void connectSip() throws SipException {
         Connect request = new Connect(this.getNewTransactionId(), this.sipVersion, this.busyTimeout, this.leaseTimeout);
-        ConnectResponse response = new ConnectResponse();
-        // todo: Remove statement by more meaningful exception
-        try {
-            this.tcpSendAndReceive(request, response);
-        } catch (IOException e) {
-            throw new SipException("communication problem", e);
-        }
+        ConnectResponse response = (ConnectResponse) this.getTcpResponse(request, ConnectResponse.class);
         this.supportedMessages = IntStream.of(response.getSupportedMessageTypes()).boxed().collect(Collectors.toList());
         this.connected = true;
     }
@@ -228,17 +249,10 @@ public class TCPConnection implements SipConnection {
      *
      * @return true if the device responds, false if it doesn't
      */
-    private boolean respondsToPing() {
+    private boolean respondsToPing() throws SipException {
         Ping ping = new Ping(this.getNewTransactionId());
-        try {
-            this.tcpSendAndReceive(ping, new Pong());
-            return true;
-        } catch (SocketTimeoutException e) {
-            return false;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        this.getTcpResponse(ping, Pong.class);
+        return true;
     }
 
     /**
@@ -251,10 +265,9 @@ public class TCPConnection implements SipConnection {
      * @return the {@link ReadOnlyDataResponse} which is received after the tcp request
      * @throws Exception if any communication or data handling problem occurs
      */
-    public Data readData(int slaveIndex, int slaveExtension, String idn) throws Exception {
+    public Data readData(int slaveIndex, int slaveExtension, String idn) throws SipException {
         ReadOnlyData request = new ReadOnlyData(this.getNewTransactionId(), (short) slaveIndex, (short) slaveExtension, idn);
-        ReadOnlyDataResponse response = new ReadOnlyDataResponse();
-        this.tcpSendAndReceive(request, response);
+        ReadOnlyDataResponse response = (ReadOnlyDataResponse) this.getTcpResponse(request, ReadOnlyDataResponse.class);
         return response.getData();
     }
 
@@ -310,11 +323,16 @@ public class TCPConnection implements SipConnection {
     }
 
     private void restartKeepAliveTimer() {
+        // todo: refactor to scheduled Executor
         this.keepAliveTimer = new Timer();
         final TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                respondsToPing();
+                try {
+                    respondsToPing();
+                } catch (SipException e) {
+                    e.printStackTrace();
+                }
             }
         };
         this.keepAliveTimer.schedule(timerTask, Math.round(this.leaseTimeout * 0.7));
