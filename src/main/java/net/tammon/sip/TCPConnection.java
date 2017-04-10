@@ -30,7 +30,12 @@ import net.tammon.sip.packets.*;
 
 import java.io.*;
 import java.net.*;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -46,7 +51,7 @@ public class TCPConnection implements SipConnection {
     private Socket socketConnection;
     private DataOutputStream dataOutputStream;
     private DataInputStream dataInputStream;
-    private Timer keepAliveTimer;
+    private ScheduledExecutorService executorService;
 
     /**
      * Establishes a TCP connection to a sercos device with given IP Address
@@ -96,7 +101,7 @@ public class TCPConnection implements SipConnection {
      * This connection has no keepAlive and will timeout if no input request comes in for longer then the standard leaseTimeout of 10s
      *
      * @param host domain name or IP Address of the drive
-     * @throws Exception in case of communication problems
+     * @throws SipException in case of communication problems
      */
     public TCPConnection(String host) throws SipException {
         this(host, false);
@@ -127,7 +132,7 @@ public class TCPConnection implements SipConnection {
         this.transactionId = 0;
         this.socketConnection = new Socket();
         try {
-            this.socketConnection.connect(new InetSocketAddress(this.ipAddress, this.sipPort), leaseTimeout);
+            this.socketConnection.connect(new InetSocketAddress(this.ipAddress, this.sipPort), busyTimeout);
             this.dataOutputStream = new DataOutputStream(this.socketConnection.getOutputStream());
             this.dataInputStream = new DataInputStream(this.socketConnection.getInputStream());
             this.supportedMessages = null;
@@ -196,7 +201,6 @@ public class TCPConnection implements SipConnection {
 
             if (header.getMessageType() == response.getMessageType()) response.setData(rawResponse);
             else throw new SipInternalException("Invalid Message Type Response");
-
             return response;
         } catch (InstantiationException | IllegalAccessException e) {
             throw new SipInternalException("Invalid Response Class Type. Cannot instantiate object.", e);
@@ -249,9 +253,13 @@ public class TCPConnection implements SipConnection {
      *
      * @return true if the device responds, false if it doesn't
      */
-    private boolean respondsToPing() throws SipException {
+    private boolean respondsToPing() {
         Ping ping = new Ping(this.getNewTransactionId());
-        this.getTcpResponse(ping, Pong.class);
+        try {
+            this.getTcpResponse(ping, Pong.class);
+        } catch (SipException e) {
+            e.printStackTrace();
+        }
         return true;
     }
 
@@ -263,7 +271,7 @@ public class TCPConnection implements SipConnection {
      * @param slaveExtension the slave extentension of the sercos device (default: 0)
      * @param idn            the 16-bit or 32-bit identifier of the parameter one wants to read (e.g. "P-0-0100" or "S-0-0100.1.1")
      * @return the {@link ReadOnlyDataResponse} which is received after the tcp request
-     * @throws Exception if any communication or data handling problem occurs
+     * @throws SipException if any communication or data handling problem occurs
      */
     public Data readData(int slaveIndex, int slaveExtension, String idn) throws SipException {
         ReadOnlyData request = new ReadOnlyData(this.getNewTransactionId(), (short) slaveIndex, (short) slaveExtension, idn);
@@ -323,19 +331,10 @@ public class TCPConnection implements SipConnection {
     }
 
     private void restartKeepAliveTimer() {
-        // todo: refactor to scheduled Executor
-        this.keepAliveTimer = new Timer();
-        final TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    respondsToPing();
-                } catch (SipException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        this.keepAliveTimer.schedule(timerTask, Math.round(this.leaseTimeout * 0.7));
+        if (Objects.isNull(this.executorService)) this.executorService = Executors.newScheduledThreadPool(1);
+        else this.executorService.shutdownNow();
+        final long period = Math.round(this.leaseTimeout * 0.7);
+        executorService.scheduleAtFixedRate(this::respondsToPing, 0, period, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -344,8 +343,7 @@ public class TCPConnection implements SipConnection {
     @Override
     public void disconnect() {
         try {
-            this.keepAliveTimer.cancel();
-            this.keepAliveTimer.purge();
+            this.executorService.shutdownNow();
             this.socketConnection.close();
         } catch (IOException e) {
             e.printStackTrace();
