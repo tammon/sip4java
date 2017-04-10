@@ -1,7 +1,7 @@
 # SERCOS Internet Protocol for Java
 This is a library to communicate to sercos devices over the Sercos Internet Protocol (SIP).
 
-###Functionality
+### Functionality
 In the first steps of development the focus is set to reading data from a sercos drive.
 Further functionality will follow in later releases.
 
@@ -15,7 +15,7 @@ Coming soon:
 * ReadEverything
 * WriteData
 
-###Latest Release
+### Latest Release
 The latest release is `0.1.0` 
 
 Add sip4java using maven:
@@ -38,7 +38,7 @@ dependencies {
 
 You can use the latest nightly build with version `0.2.0-SNAPSHOT`
 
-##License and Copyright
+## License and Copyright
 **Sercos Internet Protocol (SIP) version 1 for Java**
 
 Copyright (c) 2017. tammon (Tammo Schwindt)
