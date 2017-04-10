@@ -25,8 +25,6 @@
 
 package net.tammon.sip.packets;
 
-import java.io.IOException;
-
 public interface Response extends Packet {
-    void setData(byte[] rawData) throws IOException;
+    void setData(byte[] rawData);
 }

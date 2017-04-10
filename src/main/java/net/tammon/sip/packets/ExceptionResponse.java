@@ -25,6 +25,8 @@
 
 package net.tammon.sip.packets;
 
+import net.tammon.sip.exceptions.SipInternalException;
+
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.Arrays;
@@ -41,9 +43,13 @@ public class ExceptionResponse extends AbstractPacket implements Response {
     }
 
     @Override
-    public void setData(byte[] rawData) throws IOException {
-        this.head = new Head(rawData);
-        this.setBodyData(Arrays.copyOfRange(rawData, head.getMsgLength(), rawData.length - 1));
+    public void setData(byte[] rawData) {
+        try {
+            this.head = new Head(rawData);
+            this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
+        } catch (IOException e) {
+            throw new SipInternalException("Cannot set data of received S/IP packets", e);
+        }
     }
 
     public void setBodyData(byte[] rawBodyDataArrays) throws IOException {

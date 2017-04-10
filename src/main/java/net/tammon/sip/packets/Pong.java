@@ -25,6 +25,8 @@
 
 package net.tammon.sip.packets;
 
+import net.tammon.sip.exceptions.SipInternalException;
+
 import java.io.IOException;
 
 public class Pong extends AbstractPacket implements Response {
@@ -36,7 +38,11 @@ public class Pong extends AbstractPacket implements Response {
     }
 
     @Override
-    public void setData(byte[] rawData) throws IOException {
-        this.head = new Head(rawData);
+    public void setData(byte[] rawData) {
+        try {
+            this.head = new Head(rawData);
+        } catch (IOException e) {
+            throw new SipInternalException("Cannot set data of received S/IP packets", e);
+        }
     }
 }

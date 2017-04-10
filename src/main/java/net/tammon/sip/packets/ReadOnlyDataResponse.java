@@ -25,6 +25,7 @@
 
 package net.tammon.sip.packets;
 
+import net.tammon.sip.exceptions.SipInternalException;
 import net.tammon.sip.exceptions.TypeNotSupportedException;
 
 import java.io.DataInput;
@@ -75,8 +76,12 @@ public class ReadOnlyDataResponse extends AbstractPacket implements Response {
     }
 
     @Override
-    public void setData(byte[] rawData) throws IOException {
-        this.head = new Head(rawData);
-        this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
+    public void setData(byte[] rawData) {
+        try {
+            this.head = new Head(rawData);
+            this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
+        } catch (IOException | TypeNotSupportedException e) {
+            throw new SipInternalException("Cannot set data of received S/IP packets", e);
+        }
     }
 }
