@@ -264,7 +264,7 @@ public class TCPConnection implements SipConnection {
 				if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
 					throw new SipProtocolException("Service not supported.");					
 			}			
-			// TODO busy response einfügen
+			// TODO busy response einfÃ¼gen
 
 			if (header.getMessageType() == response.getMessageType())
 				response.setData(rawResponse);
@@ -299,7 +299,7 @@ public class TCPConnection implements SipConnection {
 
 			return outputStream.toByteArray();
 		} catch (IOException e) {
-			e.printStackTrace();// hinzugefügt von Philip Weis
+			e.printStackTrace();// hinzugefÃ¼gt von Philip Weis
 			throw new SipCommunicationException("Cannot read from Socket", e);
 		}
 	}
@@ -355,13 +355,13 @@ public class TCPConnection implements SipConnection {
 		Ping ping = new Ping(this.getNewTransactionId());
 		try {
 			this.getTcpResponse(ping, Pong.class);
-			return true; // hinzugefügt von Philip Weis
+			return true; // hinzugefÃ¼gt von Philip Weis
 			// } catch (SipException e) {
-		} catch (Exception e) { // abgeändert von Philip Weis
-			e.printStackTrace(); // hinzugefügt von Philip Weis
-			return false; // hinzugefügt von Philip Weis
+		} catch (Exception e) { // abgeÃ¤ndert von Philip Weis
+			e.printStackTrace(); // hinzugefÃ¼gt von Philip Weis
+			return false; // hinzugefÃ¼gt von Philip Weis
 		}
-		// return true; //abgeändert von Philip Weis
+		// return true; //abgeÃ¤ndert von Philip Weis
 	}
 
 	/**
