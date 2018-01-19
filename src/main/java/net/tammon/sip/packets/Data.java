@@ -485,16 +485,18 @@ public final class Data {
      * @return the converted data to String array
      */
     public String[] asStringArray() throws IOException {
-      try (DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData))) {
-        String[] output = new String[this.rawData.length / 4];
-        byte[] buffer = new byte[4];
+      try (ByteArrayInputStream in = new ByteArrayInputStream(this.rawData)) {
+        try (DataInputStream data = new DataInputStream(in)) {
+          String[] output = new String[this.rawData.length / 4];
+          byte[] buffer = new byte[4];
   
-        for (int i = 0; i < output.length; i++) {
-          data.read(buffer);
-          output[i] = (new Idn(buffer)).getIdn();
+          for (int i = 0; i < output.length; i++) {
+            data.read(buffer);
+            output[i] = (new Idn(buffer)).getIdn();
+          }
+  
+          return output;
         }
-  
-        return output;
       }
     }
 
@@ -550,16 +552,18 @@ public final class Data {
             if (this.dataAttribute.getJavaType().equals(double[].class)) return Arrays.toString(this.asDoubleArray());
             if (this.dataAttribute.getJavaType().equals(String[].class)) return Arrays.toString(this.asStringArray());
             if (this.dataAttribute.getJavaType().equals(String.class)) {
-              try (DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData))) {
-                switch (this.dataAttribute.getDisplayFormat()) {
-                  case String:
-                    return new String(this.rawData, 0, this.rawData.length, "UTF-8");
-                  case IDN:
-                    byte[] buffer = new byte[4];
-                    return (new Idn(buffer)).getIdn();
-                  default:
-                    throw new TypeNotSupportedException(
-                        "Java data type of data attribute does not match the criteria for float array. This is probably due to wrong interpretation of the java type in the data attribute");
+              try (InputStream in = new ByteArrayInputStream(this.rawData)) {
+                try (DataInputStream data = new DataInputStream(in)) {
+                  switch (this.dataAttribute.getDisplayFormat()) {
+                    case String:
+                      return new String(this.rawData, 0, this.rawData.length, "UTF-8");
+                    case IDN:
+                      byte[] buffer = new byte[4];
+                      return (new Idn(buffer)).getIdn();
+                    default:
+                      throw new TypeNotSupportedException(
+                          "Java data type of data attribute does not match the criteria for float array. This is probably due to wrong interpretation of the java type in the data attribute");
+                  }
                 }
               }
             }
