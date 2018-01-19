@@ -485,16 +485,17 @@ public final class Data {
      * @return the converted data to String array
      */
     public String[] asStringArray() throws IOException {
-        DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData));
+      try (DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData))) {
         String[] output = new String[this.rawData.length / 4];
         byte[] buffer = new byte[4];
-
+  
         for (int i = 0; i < output.length; i++) {
-            data.read(buffer);
-            output[i] = (new Idn(buffer)).getIdn();
+          data.read(buffer);
+          output[i] = (new Idn(buffer)).getIdn();
         }
-
+  
         return output;
+      }
     }
 
     /**
@@ -552,7 +553,7 @@ public final class Data {
                 DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData));
                 switch (this.dataAttribute.getDisplayFormat()) {
                     case String:
-                        return new String(this.rawData, 0, this.rawData.length, "ASCII");
+                        return new String(this.rawData, 0, this.rawData.length, "UTF-8");
                     case IDN:
                         byte[] buffer = new byte[4];
                         return (new Idn(buffer)).getIdn();
