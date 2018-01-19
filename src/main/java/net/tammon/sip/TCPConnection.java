@@ -456,16 +456,9 @@ public class TCPConnection implements SipConnection {
 	 * device
 	 */
 	@Override
-	// public void disconnect() {
-	// try {
-	// this.executorService.shutdownNow();
-	// this.socketConnection.close();
-	//
-	// } catch (IOException e) {
-	// e.printStackTrace();
-	// }
-	// }
 	public void disconnect() {
+	  
+	  close();
 
 		if (executorService != null) {
 			try {
@@ -476,9 +469,27 @@ public class TCPConnection implements SipConnection {
 		}
 
 		try {
-			socketConnection.close();
+		  if (socketConnection != null) {
+		    socketConnection.close();
+		    socketConnection = null;
+		  }
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+
+  private void close() {
+    try {
+      if (dataInputStream != null) {
+        dataInputStream.close();
+        dataInputStream = null;
+      }
+      if (dataOutputStream != null) {
+        dataOutputStream.close();
+        dataOutputStream = null;
+      }
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
+  }
 }
