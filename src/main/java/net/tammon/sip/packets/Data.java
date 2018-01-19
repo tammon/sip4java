@@ -550,16 +550,18 @@ public final class Data {
             if (this.dataAttribute.getJavaType().equals(double[].class)) return Arrays.toString(this.asDoubleArray());
             if (this.dataAttribute.getJavaType().equals(String[].class)) return Arrays.toString(this.asStringArray());
             if (this.dataAttribute.getJavaType().equals(String.class)) {
-                DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData));
+              try (DataInputStream data = new DataInputStream(new ByteArrayInputStream(this.rawData))) {
                 switch (this.dataAttribute.getDisplayFormat()) {
-                    case String:
-                        return new String(this.rawData, 0, this.rawData.length, "UTF-8");
-                    case IDN:
-                        byte[] buffer = new byte[4];
-                        return (new Idn(buffer)).getIdn();
-                    default:
-                        throw new TypeNotSupportedException("Java data type of data attribute does not match the criteria for float array. This is probably due to wrong interpretation of the java type in the data attribute");
+                  case String:
+                    return new String(this.rawData, 0, this.rawData.length, "UTF-8");
+                  case IDN:
+                    byte[] buffer = new byte[4];
+                    return (new Idn(buffer)).getIdn();
+                  default:
+                    throw new TypeNotSupportedException(
+                        "Java data type of data attribute does not match the criteria for float array. This is probably due to wrong interpretation of the java type in the data attribute");
                 }
+              }
             }
         } catch (Exception e) {
             e.printStackTrace();
