@@ -268,6 +268,8 @@ public final class Data {
                             : this.getDataAsDoubleWithDecPoint(this.getDataAsInt());
                 case eightBytes:
                     return this.getDataAsDoubleWithDecPoint(this.getDataAsLong());
+                default:
+                  throw new TypeNotSupportedException("Data length format is currently not supported");                    
             }
         }
         throw new IllegalTypeConversionException(this.dataAttribute.getJavaType(), double.class);
@@ -604,6 +606,7 @@ public final class Data {
     /**
      * @return the corresponding java data type to the sercos device display format and length of the data
      */
+    @SuppressWarnings("rawtypes")
     public Class getJavaType() {
         return this.dataAttribute.getJavaType();
     }
