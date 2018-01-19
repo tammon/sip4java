@@ -58,20 +58,23 @@ public final class Data {
      * @return numbers as little endian byte array
      */
     public static byte[] getByteArray(Number... numbers) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+      try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
         DataOutput data = DataStreamFactory.getLittleEndianDataOutputStream(byteArrayOutputStream);
-        try {
-            for (Number number : numbers) {
-                if (Byte.class.isInstance(number)) data.writeByte((byte) number);
-                else if (Short.class.isInstance(number)) data.writeShort((short) number);
-                else if (Integer.class.isInstance(number)) data.writeInt((int) number);
-                else if (Long.class.isInstance(number)) data.writeLong((long) number);
-            }
-            return byteArrayOutputStream.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        for (Number number : numbers) {
+          if (Byte.class.isInstance(number))
+            data.writeByte((byte) number);
+          else if (Short.class.isInstance(number))
+            data.writeShort((short) number);
+          else if (Integer.class.isInstance(number))
+            data.writeInt((int) number);
+          else if (Long.class.isInstance(number))
+            data.writeLong((long) number);
         }
+        return byteArrayOutputStream.toByteArray();
+      } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+      }
     }
 
     /**
@@ -81,16 +84,15 @@ public final class Data {
      * @return concatenated byte array
      */
     public static byte[] concatenate(byte[]... inputByteArrays) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            for (byte[] inputByteArray : inputByteArrays) {
-                outputStream.write(inputByteArray);
-            }
-            return outputStream.toByteArray();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        for (byte[] inputByteArray : inputByteArrays) {
+          outputStream.write(inputByteArray);
         }
+        return outputStream.toByteArray();
+      } catch (Exception e) {
+        e.printStackTrace();
+        return null;
+      }
     }
 
     /**
@@ -100,16 +102,15 @@ public final class Data {
      * @return concatenated byte array
      */
     public static byte[] concatenate(byte... inputByteArrays) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            for (byte inputByteArray : inputByteArrays) {
-                outputStream.write(inputByteArray);
-            }
-            return outputStream.toByteArray();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        for (byte inputByteArray : inputByteArrays) {
+          outputStream.write(inputByteArray);
         }
+        return outputStream.toByteArray();
+      } catch (Exception e) {
+        e.printStackTrace();
+        return null;
+      }
     }
 
     private static String addZerosIfNeeded(String number, int neededLength) {
