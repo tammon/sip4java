@@ -130,7 +130,17 @@ public final class DataAttribute {
                         throw new TypeNotSupportedException("eight byte unsigned decimal is currently not supported by this library! Sorry...");
                 }
             case HexaDecimal:
-                return isList ? byte[][].class : byte[].class;
+                switch(dataLength) {
+                  case oneByte:
+                    return isList ? short[].class : short.class;
+                  case twoBytes:
+                    return isList ? int[].class : int.class;
+                  case fourBytes:
+                    return isList ? long[].class : long.class;
+                  case eightBytes:
+                  default:
+                    return isList ? byte[][].class : byte[].class;
+                }
             case SignedDecimal:
                 switch (dataLength) {
                     case oneByte:
