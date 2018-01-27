@@ -16,7 +16,7 @@ Coming soon:
 * WriteData
 
 ### Latest Release
-The latest release is `0.1.0` 
+The latest release is `0.3.0` 
 
 Add sip4java using maven:
 
@@ -24,7 +24,7 @@ Add sip4java using maven:
 <dependency>
     <groupId>net.tammon</groupId>
     <artifactId>sip</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.0</version>
 </dependency>
  ```
  
@@ -32,11 +32,11 @@ Add sip4java using gradle:
 
 ```
 dependencies {
-  compile 'net.tammon:sip:0.1.0'
+  compile 'net.tammon:sip:0.3.0'
 }
 ```
 
-You can use the latest nightly build with version `0.2.0-SNAPSHOT`
+You can use the latest nightly build with version `0.3.0-SNAPSHOT`
 
 ## License and Copyright
 **Sercos Internet Protocol (SIP) version 1 for Java**
