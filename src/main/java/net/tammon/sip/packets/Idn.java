@@ -62,7 +62,7 @@ final class Idn {
      * @throws IllegalArgumentException if the specified String is not a valid Idn
      */
     static byte[] getIdnAsByteArray(String idn) throws IllegalArgumentException {
-        if (idn.matches("^[SP]-\\d-\\d\\d\\d\\d\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])$")){
+        if (idn.matches("^[SP]-\\d-\\d\\d\\d\\d\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])$")) {
             byte byte1 = Byte.parseByte(idn.substring(9,10));
             byte byte2 = Byte.parseByte(idn.substring(11));
             return Data.concatenate(getIdnAs16BitByteArray(idn),
