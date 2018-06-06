@@ -24,7 +24,7 @@ Add sip4java using maven:
 <dependency>
     <groupId>net.tammon</groupId>
     <artifactId>sip</artifactId>
-    <version>0.3.0</version>
+    <version>0.4.0</version>
 </dependency>
  ```
  
