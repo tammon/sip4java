@@ -42,6 +42,10 @@ class ReadOnlyDataTest {
         readOnlyData = new ReadOnlyData(4, (short)1, (short)0, "P-1-0010");
         assertArrayEquals(new byte[]{0x4, 0x0, 0x0, 0x0, 0x47, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0xA, (byte)0x90, 0x0, 0x0},
                 readOnlyData.getTcpMsgAsByteArray());
+        //bugfix: exception 'The specified idn is not a valid drive Parameter'
+        readOnlyData = new ReadOnlyData(3, (short)0, (short)0, "P-0-1058.0.35");
+        assertArrayEquals(new byte[]{0x3, 0x0, 0x0, 0x0, 0x47, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x22, (byte) 0x84, 0x23, 0x0},
+                readOnlyData.getTcpMsgAsByteArray());
     }
 
 }
