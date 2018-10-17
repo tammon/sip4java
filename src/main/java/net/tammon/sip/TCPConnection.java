@@ -72,11 +72,11 @@ public class TCPConnection implements SipConnection {
 
 		}
 
-		this.sipPort = new Integer(properties.getProperty("sipPort"));
-		this.leaseTimeout = new Integer(properties.getProperty("leaseTimeout"));
-		this.busyTimeout = new Integer(properties.getProperty("busyTimeout"));
-		this.maxDelay = new Integer(properties.getProperty("maxDelay"));
-		this.sipVersion = new Integer(properties.getProperty("sipVersion"));
+		this.sipPort = Integer.parseInt(properties.getProperty("sipPort"));
+		this.leaseTimeout = Integer.parseInt(properties.getProperty("leaseTimeout"));
+		this.busyTimeout = Integer.parseInt(properties.getProperty("busyTimeout"));
+		this.maxDelay = Integer.parseInt(properties.getProperty("maxDelay"));
+		this.sipVersion = Integer.parseInt(properties.getProperty("sipVersion"));
 
 		this.connectSocket();
 		this.connectSip();
@@ -342,8 +342,10 @@ public class TCPConnection implements SipConnection {
 	private void connectSip() throws SipException {
 		Connect request = new Connect(this.getNewTransactionId(), this.sipVersion, this.busyTimeout, this.leaseTimeout);
 		ConnectResponse response = (ConnectResponse) this.getTcpResponse(request, ConnectResponse.class);
-		this.supportedMessages = IntStream.of(response.getSupportedMessageTypes()).boxed().collect(Collectors.toList());
-		this.connected = true;
+		synchronized (this) {
+			this.supportedMessages = IntStream.of(response.getSupportedMessageTypes()).boxed().collect(Collectors.toList());
+			this.connected = true;
+		}
 	}
 
 	/**
@@ -397,7 +399,9 @@ public class TCPConnection implements SipConnection {
 	 */
 	@Override
 	public boolean isConnected() {
-		return connected && this.socketConnection.isConnected();
+		synchronized (this) {
+			return connected && this.socketConnection.isConnected();
+		}
 	}
 
 	/**
@@ -408,7 +412,9 @@ public class TCPConnection implements SipConnection {
 	 */
 	@Override
 	public List<Integer> getSupportedMessages() {
-		return supportedMessages;
+		synchronized (this) {
+			return supportedMessages;
+		}
 	}
 
 	/**
@@ -469,9 +475,11 @@ public class TCPConnection implements SipConnection {
 		}
 
 		try {
-		  if (socketConnection != null) {
-		    socketConnection.close();
-		    socketConnection = null;
+		  synchronized (this) {
+			  if (socketConnection != null) {
+				  socketConnection.close();
+				  socketConnection = null;
+			  }
 		  }
 		} catch (IOException e) {
 			e.printStackTrace();
