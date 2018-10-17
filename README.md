@@ -32,7 +32,7 @@ Add sip4java using gradle:
 
 ```
 dependencies {
-  compile 'net.tammon:sip:0.4.1'
+  compile 'net.tammon:sip:0.4.2'
 }
 ```
 
