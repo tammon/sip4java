@@ -143,6 +143,12 @@ public final class Data {
         return output;
     }
 
+    public static byte parseUnsignedByte(String s) {
+        int number = Integer.parseInt(s);
+        number = number > 127 ? number - 256 : number;
+        return Byte.parseByte(Integer.toString(number));
+    }
+
     /**
      * Converts the raw data of the Data object to type byte
      *

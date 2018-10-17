@@ -63,8 +63,9 @@ final class Idn {
      */
     static byte[] getIdnAsByteArray(String idn) throws IllegalArgumentException {
         if (idn.matches("^[SP]-\\d-\\d\\d\\d\\d\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])$")) {
-            byte byte1 = Byte.parseByte(idn.substring(9,10));
-            byte byte2 = Byte.parseByte(idn.substring(11));
+
+            byte byte1 = Data.parseUnsignedByte(idn.substring(9,10));
+            byte byte2 = Data.parseUnsignedByte(idn.substring(11));
             return Data.concatenate(getIdnAs16BitByteArray(idn),
                     Data.concatenate(byte2, byte1));
         } else if (idn.matches("^[SP]-\\d-\\d\\d\\d\\d$")){
@@ -74,7 +75,7 @@ final class Idn {
     }
 
     private static byte[] getIdnAs16BitByteArray(String idn) {
-        byte byte3 = (byte)((Byte.parseByte(idn.substring(2,3)) | ((idn.charAt(0) == 'P') ? (0x01 << 3) : 0x00)) << 4);
+        byte byte3 = (byte)((Data.parseUnsignedByte(idn.substring(2,3)) | ((idn.charAt(0) == 'P') ? (0x01 << 3) : 0x00)) << 4);
         byte[] parameterNo = Data.getByteArray(Short.parseShort(idn.substring(4,8)));
         byte3 = (byte) (byte3 | parameterNo[1]);
         byte byte4 = parameterNo[0];
