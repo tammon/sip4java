@@ -16,7 +16,7 @@ Coming soon:
 * WriteData
 
 ### Latest Release
-The latest release is `0.4.1` 
+The latest release is `0.4.2` 
 
 Add sip4java using maven:
 
@@ -24,7 +24,7 @@ Add sip4java using maven:
 <dependency>
     <groupId>net.tammon</groupId>
     <artifactId>sip</artifactId>
-    <version>0.4.1</version>
+    <version>0.4.2</version>
 </dependency>
  ```
  
