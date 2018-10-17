@@ -571,7 +571,7 @@ public final class Data {
                       return (new Idn(buffer)).getIdn();
                     default:
                       throw new TypeNotSupportedException(
-                          "Java data type of data attribute does not match the criteria for float array. This is probably due to wrong interpretation of the java type in the data attribute");
+                          "Java data type of data attribute does not match the criteria for String. This is probably due to wrong interpretation of the java type in the data attribute");
                   }
                 }
               }
