@@ -63,9 +63,12 @@ final class Idn {
      */
     static byte[] getIdnAsByteArray(String idn) throws IllegalArgumentException {
         if (idn.matches("^[SP]-\\d-\\d\\d\\d\\d\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])$")) {
+            String idnPointPart = idn.substring(9);
+            String[] idnPointSeparatedParts = idnPointPart.split("\\.");
 
-            byte byte1 = Data.parseUnsignedByte(idn.substring(9,10));
-            byte byte2 = Data.parseUnsignedByte(idn.substring(11));
+            byte byte1 = Data.parseUnsignedByte(idnPointSeparatedParts[0]);
+            byte byte2 = Data.parseUnsignedByte(idnPointSeparatedParts[1]);
+
             return Data.concatenate(getIdnAs16BitByteArray(idn),
                     Data.concatenate(byte2, byte1));
         } else if (idn.matches("^[SP]-\\d-\\d\\d\\d\\d$")){
@@ -75,8 +78,14 @@ final class Idn {
     }
 
     private static byte[] getIdnAs16BitByteArray(String idn) {
-        byte byte3 = (byte)((Data.parseUnsignedByte(idn.substring(2,3)) | ((idn.charAt(0) == 'P') ? (0x01 << 3) : 0x00)) << 4);
-        byte[] parameterNo = Data.getByteArray(Short.parseShort(idn.substring(4,8)));
+        String idnDashPart = idn.substring(0,8);
+        String[] idnDashSeparatedParts = idnDashPart.split("-");
+
+        byte byte3 = (byte)((Data.parseUnsignedByte(idnDashSeparatedParts[1]) |
+                ((idnDashSeparatedParts[0].equals("P")) ? (0x01 << 3) : 0x00)) << 4);
+        byte[] parameterNo = Data.getByteArray(Short.parseShort(idnDashSeparatedParts[2]));
+
+        assert parameterNo != null;
         byte3 = (byte) (byte3 | parameterNo[1]);
         byte byte4 = parameterNo[0];
         return Data.concatenate(byte4, byte3);
