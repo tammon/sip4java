@@ -242,14 +242,13 @@ public class TCPConnection implements SipConnection {
 	private Response getResponse(byte[] rawResponse, Request request, Class responseClass)
 			throws SipProtocolException, SipServiceNotSupportedException {
 		try {
-			Response response = (Response) responseClass.newInstance();
 
 			Head header = new Head(rawResponse);
 
 			// Check if we got the right response to our request
 			if (header.getTransactionId() != request.getTransactionId())
 				throw new SipProtocolException(
-						"The response transaction ID " + response.getPacketHead().getTransactionId()
+						"The response transaction ID " + header.getTransactionId()
 								+ " doesn't match the request transaction ID " + request.getTransactionId());
 
 			// Check if Drive threw an communication exception
@@ -264,6 +263,9 @@ public class TCPConnection implements SipConnection {
 				if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
 					throw new SipProtocolException("Service not supported.");					
 			}			
+
+			Response response = (Response) responseClass.newInstance();
+
 			// TODO busy response einfügen
 
 			if (header.getMessageType() == response.getMessageType())
