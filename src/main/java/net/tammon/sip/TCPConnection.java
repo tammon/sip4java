@@ -167,6 +167,7 @@ public class TCPConnection implements SipConnection {
 		this.socketConnection = new Socket();
 		try {
 			this.socketConnection.connect(new InetSocketAddress(this.ipAddress, this.sipPort), busyTimeout);
+			this.socketConnection.setSoTimeout(busyTimeout);
 			this.dataOutputStream = new DataOutputStream(this.socketConnection.getOutputStream());
 			this.dataInputStream = new DataInputStream(this.socketConnection.getInputStream());
 			this.supportedMessages = null;
@@ -301,7 +302,7 @@ public class TCPConnection implements SipConnection {
 
 			return outputStream.toByteArray();
 		} catch (IOException e) {
-			e.printStackTrace();// hinzugefügt von Philip Weis
+			//e.printStackTrace();// hinzugefügt von Philip Weis
 			throw new SipCommunicationException("Cannot read from Socket", e);
 		}
 	}
