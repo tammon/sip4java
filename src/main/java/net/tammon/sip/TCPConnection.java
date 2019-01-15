@@ -290,6 +290,7 @@ public class TCPConnection implements SipConnection {
 	 *             in case of any problem occurs during socket communication
 	 */
 	private byte[] getRawResponseFromSocket() throws SipCommunicationException {
+	    System.out.println("getRawResponseFromSocket>");
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 			byte[] buffer = new byte[10024];
 			int readLength;
@@ -297,6 +298,7 @@ public class TCPConnection implements SipConnection {
 				readLength = dataInputStream.read(buffer);
 				if (readLength >= 0) {
 					outputStream.write(buffer, 0, readLength + 1);
+					ReadOnlyDataResponse.printTel(buffer);
 				}
 			} while (readLength >= 10024);
 
