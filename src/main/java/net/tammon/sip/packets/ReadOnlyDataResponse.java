@@ -34,8 +34,13 @@ import java.io.IOException;
 import java.io.InvalidClassException;
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ReadOnlyDataResponse extends AbstractPacket implements Response {
 
+    private static Logger _logger = LoggerFactory.getLogger("net.tammon.sip");
+    
     private final static int messageType = ReadOnlyData.MSG_READ_ONLY_DATA+1;
     private Data data;
 
@@ -56,7 +61,7 @@ public class ReadOnlyDataResponse extends AbstractPacket implements Response {
         byte[] rawData = new byte[lengthOfData];
         ((FilterInputStream)data).read(rawData);
         this.data = new Data(rawData, dataAttribute);
-        System.out.println(String.format("ReadOnly Data: raw-len=%d; data-len=%d", rawBodyData.length, lengthOfData));
+        _logger.info("ReadOnly Data: raw-len={}; data-len={}", rawBodyData.length, lengthOfData);
     }
 
     /**
@@ -79,21 +84,11 @@ public class ReadOnlyDataResponse extends AbstractPacket implements Response {
     @Override
     public void setData(byte[] rawData) {
         try {
-            printTel(rawData);
             this.head = new Head(rawData);
             this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
         } catch (IOException | TypeNotSupportedException e) {
             throw new SipInternalException("Cannot set data of received S/IP packets", e);
         }
-    }
-
-    public static void printTel(byte[] rawData) {
-        StringBuilder b = new StringBuilder();
-        int max = rawData.length > 256 ? 256 : rawData.length-1;
-        for (int i=0; i<max; i++) {
-            b.append(String.format(" %02X", rawData[i]));
-        }
-        System.out.println(b.toString());
     }
 
     public static int getFixLength() {

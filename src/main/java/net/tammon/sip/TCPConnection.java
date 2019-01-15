@@ -39,10 +39,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * The TCPConnection class implements the SipConnection Interface and creates a sip connection via the TCP/IP protocol
  */
 public class TCPConnection implements SipConnection {
+    
+    private static Logger _logger = LoggerFactory.getLogger("net.tammon.sip");
+
     private InetAddress ipAddress;
     private int maxDelay, leaseTimeout, busyTimeout, sipPort, sipVersion;
     private int transactionId = 0;
@@ -214,12 +220,11 @@ public class TCPConnection implements SipConnection {
         } else {
             rawResponse = getRawResponseFromSocket();
         }
-        return getResponse(rawResponse, request, response);
+        return getResponse(printlnTel(rawResponse), request, response);
     }
 
     private byte[] getRawResponseFromSocket(Request request)
             throws SipCommunicationException, SipProtocolException {
-        System.out.println("getRawResponseFromSocket>");
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
             waitOnData();
@@ -254,7 +259,6 @@ public class TCPConnection implements SipConnection {
                 readLength = dataInputStream.read(buffer);
                 if (readLength >= 0) {
                     outputStream.write(buffer, 0, readLength);
-                    ReadOnlyDataResponse.printTel(buffer);
                     revBytes += readLength;
                 }
             }
@@ -286,7 +290,6 @@ public class TCPConnection implements SipConnection {
                 readLength = dataInputStream.read(buffer);
                 if (readLength >= 0) {
                     outputStream.write(buffer, 0, readLength + 1);
-                    ReadOnlyDataResponse.printTel(buffer);
                 }
             }
             while (readLength >= 10024);
@@ -378,7 +381,7 @@ public class TCPConnection implements SipConnection {
         int repeat = 100; //max. wait 1 Sec.
         try {
             while (dataInputStream.available() == 0 && repeat > 0) {
-                System.out.println("no values");
+                _logger.info("wait: no values");
                 try {
                     Thread.sleep(10);
                     repeat--;
@@ -582,5 +585,26 @@ public class TCPConnection implements SipConnection {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+    }
+    
+    private static byte [] printlnTel(byte[] rawData) {
+        printTel(rawData);
+        return rawData;
+    }
+    
+    public static void printTel(byte[] rawData) {
+        if (null == rawData) {
+            return;
+        }
+        if (!_logger.isInfoEnabled()) {
+            return;
+        }
+        StringBuilder b = new StringBuilder();
+        int max = rawData.length > 256 ? 256 : rawData.length-1;
+        for (int i=0; i<max; i++) {
+            b.append(String.format(" %02X", rawData[i]));
+        }
+        
+        _logger.info(b.toString());
     }
 }
