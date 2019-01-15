@@ -229,10 +229,6 @@ public class TCPConnection implements SipConnection {
             // Read Header
             byte[] rawheader = new byte[Head.getFixLength()];
             readLength = dataInputStream.read(rawheader, 0, Head.getFixLength());
-            if (readLength == 0) {
-                // todo Exception;
-                return null;
-            }
 
             Head header = new Head(rawheader);
 
@@ -243,20 +239,9 @@ public class TCPConnection implements SipConnection {
                                 + " doesn't match the request transaction ID " + request.getTransactionId());
             }
 
-            // Check if Drive threw an communication exception
-            if (header.getMessageType() == Head.MSG_EXCEPTION) {
-                ExceptionResponse exceptionResponse = new ExceptionResponse(null);
-                if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
-                    throw new SipProtocolException("Drive threw Communication Exception."
-                            + ((exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
-                                    ? (" SIP-SpecificErrorCode: " + exceptionResponse.getSpecificErrorCode())
-                                    : (" SIP-CommonErrorCode: " + exceptionResponse.getCommonErrorCode())));
-
-                if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
-                    throw new SipProtocolException("Service not supported.");
-            }
-
             outputStream.write(rawheader, 0, readLength);
+
+            checkAndCreateSipException(outputStream, header);
 
             byte[] rawReadOnlyData = new byte[ReadOnlyDataResponse.getFixLength()];
             readLength = dataInputStream.read(rawReadOnlyData, 0, ReadOnlyDataResponse.getFixLength());
@@ -283,23 +268,34 @@ public class TCPConnection implements SipConnection {
         }
     }
 
-    private void waitOnData() {
-        int repeat = 100; //max. wait 1 Sec.
-        try {
-            while (dataInputStream.available() == 0 && repeat > 0) {
-                System.out.println("no values");
-                try {
-                    Thread.sleep(10);
-                    repeat--;
-                } catch (InterruptedException e) {
+    /**
+     * Reads the data from the open Socket
+     *
+     * @return the raw data of the socket as byte array
+     * @throws SipCommunicationException
+     *             in case of any problem occurs during socket communication
+     */
+    private byte[] getRawResponseFromSocket() throws SipCommunicationException {
+    
+        waitOnData();
+    
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[10024];
+            int readLength;
+            do {
+                readLength = dataInputStream.read(buffer);
+                if (readLength >= 0) {
+                    outputStream.write(buffer, 0, readLength + 1);
+                    ReadOnlyDataResponse.printTel(buffer);
                 }
             }
+            while (readLength >= 10024);
+    
+            return outputStream.toByteArray();
         } catch (IOException e) {
+            // e.printStackTrace();// hinzugefügt von Philip Weis
+            throw new SipCommunicationException("Cannot read from Socket", e);
         }
-    }
-
-    private boolean isOnlyDataResponse(Request request) {
-        return request.getMessageType() == 71;
     }
 
     /**
@@ -323,32 +319,24 @@ public class TCPConnection implements SipConnection {
     private Response getResponse(byte[] rawResponse, Request request, Class responseClass)
             throws SipProtocolException, SipServiceNotSupportedException {
         try {
-
+    
             Head header = new Head(rawResponse);
-
+    
             // Check if we got the right response to our request
             if (header.getTransactionId() != request.getTransactionId())
                 throw new SipProtocolException(
                         "The response transaction ID " + header.getTransactionId()
                                 + " doesn't match the request transaction ID " + request.getTransactionId());
-
+    
             // Check if Drive threw an communication exception
             if (header.getMessageType() == Head.MSG_EXCEPTION) {
-                ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
-                if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
-                    throw new SipProtocolException("Drive threw Communication Exception."
-                            + ((exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
-                                    ? (" SIP-SpecificErrorCode: " + exceptionResponse.getSpecificErrorCode())
-                                    : (" SIP-CommonErrorCode: " + exceptionResponse.getCommonErrorCode())));
-
-                if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
-                    throw new SipProtocolException("Service not supported.");
+                createSipException(rawResponse);
             }
-
+    
             Response response = (Response) responseClass.newInstance();
-
+    
             // TODO busy response einfügen
-
+    
             if (header.getMessageType() == response.getMessageType())
                 response.setData(rawResponse);
             else
@@ -362,34 +350,47 @@ public class TCPConnection implements SipConnection {
         }
     }
 
-    /**
-     * Reads the data from the open Socket
-     *
-     * @return the raw data of the socket as byte array
-     * @throws SipCommunicationException
-     *             in case of any problem occurs during socket communication
-     */
-    private byte[] getRawResponseFromSocket() throws SipCommunicationException {
+    private void checkAndCreateSipException(ByteArrayOutputStream outputStream, Head header)
+            throws IOException, SipProtocolException {
+        int readLength;
+        // Check if Drive threw an communication exception
+        if (header.getMessageType() == Head.MSG_EXCEPTION) {
+            byte [] rawException = new byte[1024];
+            readLength = dataInputStream.read(rawException);
+            outputStream.write(rawException, 0, readLength+1);
+            createSipException(outputStream.toByteArray());
+        }
+    }
 
-        waitOnData();
+    private void createSipException(byte [] excption) throws IOException, SipProtocolException {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(excption);
+        if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
+            throw new SipProtocolException("Drive threw Communication Exception."
+                    + ((exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
+                            ? (" SIP-SpecificErrorCode: " + exceptionResponse.getSpecificErrorCode())
+                            : (" SIP-CommonErrorCode: " + exceptionResponse.getCommonErrorCode())));
 
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[10024];
-            int readLength;
-            do {
-                readLength = dataInputStream.read(buffer);
-                if (readLength >= 0) {
-                    outputStream.write(buffer, 0, readLength + 1);
-                    ReadOnlyDataResponse.printTel(buffer);
+        if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
+            throw new SipProtocolException("Service not supported.");
+    }
+
+    private void waitOnData() {
+        int repeat = 100; //max. wait 1 Sec.
+        try {
+            while (dataInputStream.available() == 0 && repeat > 0) {
+                System.out.println("no values");
+                try {
+                    Thread.sleep(10);
+                    repeat--;
+                } catch (InterruptedException e) {
                 }
             }
-            while (readLength >= 10024);
-
-            return outputStream.toByteArray();
         } catch (IOException e) {
-            // e.printStackTrace();// hinzugefügt von Philip Weis
-            throw new SipCommunicationException("Cannot read from Socket", e);
         }
+    }
+
+    private boolean isOnlyDataResponse(Request request) {
+        return request.getMessageType() == 71;
     }
 
     /**
