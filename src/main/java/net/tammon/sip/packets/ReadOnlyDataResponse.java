@@ -34,9 +34,14 @@ import java.io.IOException;
 import java.io.InvalidClassException;
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ReadOnlyDataResponse extends AbstractPacket implements Response {
 
-    private final static int messageType = 72;
+    private static Logger _logger = LoggerFactory.getLogger("net.tammon.sip");
+    
+    private final static int messageType = ReadOnlyData.MSG_READ_ONLY_DATA+1;
     private Data data;
 
     /**
@@ -56,6 +61,7 @@ public class ReadOnlyDataResponse extends AbstractPacket implements Response {
         byte[] rawData = new byte[lengthOfData];
         ((FilterInputStream)data).read(rawData);
         this.data = new Data(rawData, dataAttribute);
+        _logger.info("ReadOnly Data: raw-len={}; data-len={}", rawBodyData.length, lengthOfData);
     }
 
     /**
@@ -83,5 +89,17 @@ public class ReadOnlyDataResponse extends AbstractPacket implements Response {
         } catch (IOException | TypeNotSupportedException e) {
             throw new SipInternalException("Cannot set data of received S/IP packets", e);
         }
+    }
+
+    public static int getFixLength() {
+        //     sizeof(attribute) + sizefo(data length)
+        return (Integer.SIZE + Integer.SIZE)/8;
+    }
+
+    public static int getLengthOfData(byte[] rawReadOnlyData) throws IOException {
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawReadOnlyData);
+        int lengthOfData = data.readInt(); //attribute
+        lengthOfData = data.readInt();     //length 
+        return lengthOfData;
     }
 }
