@@ -12,7 +12,7 @@ import net.tammon.sip.packets.Data;
 
 class TCPConnectionTest {
 
-    //@Disabled
+    @Disabled
     @Test
     void testReadDataSimple() {
         Properties props = new Properties();
@@ -33,7 +33,9 @@ class TCPConnectionTest {
             e.printStackTrace();
         }
     }    
-    //@Disabled
+    
+    
+    @Disabled
     @Test
     void testReadData() {
         Properties props = new Properties();
