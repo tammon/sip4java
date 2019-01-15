@@ -588,11 +588,11 @@ public class TCPConnection implements SipConnection {
     }
     
     private static byte [] printlnTel(byte[] rawData) {
-        printTel(rawData);
+        printTelegram(rawData);
         return rawData;
     }
     
-    public static void printTel(byte[] rawData) {
+    public static void printTelegram(byte[] rawData) {
         if (null == rawData) {
             return;
         }
@@ -600,9 +600,15 @@ public class TCPConnection implements SipConnection {
             return;
         }
         StringBuilder b = new StringBuilder();
+        b.append("data-len: ");
+        b.append(rawData.length);
+        b.append(System.lineSeparator());
         int max = rawData.length > 256 ? 256 : rawData.length-1;
         for (int i=0; i<max; i++) {
             b.append(String.format(" %02X", rawData[i]));
+            if (i > 15 && i % 16 == 0) {
+                b.append(System.lineSeparator());
+            }
         }
         
         _logger.info(b.toString());
