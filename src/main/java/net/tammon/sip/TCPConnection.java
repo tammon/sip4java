@@ -39,6 +39,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.junit.jupiter.engine.descriptor.NestedClassTestDescriptor;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Headers;
+
 /**
  * The TCPConnection class implements the SipConnection Interface and creates a
  * sip connection via the TCP/IP protocol
@@ -209,18 +212,110 @@ public class TCPConnection implements SipConnection {
 	 * @throws SipException
 	 *             in case of communication problems
 	 */
-	private synchronized Response getTcpResponse(Request request, Class response) throws SipException {
+	@SuppressWarnings("rawtypes")
+    private synchronized Response getTcpResponse(Request request, Class response) throws SipException {
 		if (this.isSupported(request.getMessageType()))
 			throw new SipServiceNotSupportedException("The requested operation " + request.getClass().getSimpleName()
 					+ " is not in the drive's list of supported messages");
 
 		sendDataToServer(request.getTcpMsgAsByteArray());
 
-		byte[] rawResponse = getRawResponseFromSocket();
+		byte[] rawResponse;// = getRawResponseFromSocketNew();
+		if (isOnlyDataResponse(request)) {
+		    rawResponse = getRawResponseFromSocket(request, response);
+		}
+		else {
+		    rawResponse = getRawResponseFromSocket();
+		}
 		return getResponse(rawResponse, request, response);
 	}
 
-	/**
+	@SuppressWarnings("rawtypes")
+    private byte[] getRawResponseFromSocket(Request request, Class response) throws SipCommunicationException, SipProtocolException {
+        System.out.println("getRawResponseFromSocket>");
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            
+            waitOnData();
+/*            
+            byte [] b = new byte[8];
+            while(dataInputStream.available() > 0) {
+                dataInputStream.read(b);
+                outputStream.write(b, 0, b.length);
+            }
+            if (true) return outputStream.toByteArray();
+*/            
+            int readLength;
+            
+            //Read Header
+            byte [] rawheader = new byte[Head.getFixLength()];
+            readLength = dataInputStream.read(rawheader, 0, Head.getFixLength());
+            if (readLength == 0) {
+                //todo Exception;
+                return null;
+            }   
+            
+            Head header = new Head(rawheader); 
+                
+            // Check if we got the right response to our request
+            if (header.getTransactionId() != request.getTransactionId()) {
+                throw new SipProtocolException(
+                        "The response transaction ID " + header.getTransactionId()
+                                + " doesn't match the request transaction ID " + request.getTransactionId());
+            }
+            
+            // Check if Drive threw an communication exception
+            if (header.getMessageType() == Head.MSG_EXCEPTION) {
+                ExceptionResponse exceptionResponse = new ExceptionResponse(null);
+                if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)                  
+                    throw new SipProtocolException("Drive threw Communication Exception."
+                        + ((exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
+                                ? (" SIP-SpecificErrorCode: " + exceptionResponse.getSpecificErrorCode())
+                                : (" SIP-CommonErrorCode: " + exceptionResponse.getCommonErrorCode())));
+                
+                if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
+                    throw new SipProtocolException("Service not supported.");                   
+            }           
+            
+            outputStream.write(rawheader, 0, readLength);
+            
+            byte [] rawReadOnlyData = new byte[ReadOnlyDataResponse.getFixLength()];
+            readLength = dataInputStream.read(rawReadOnlyData, 0, ReadOnlyDataResponse.getFixLength());
+            
+            
+            byte[] buffer = new byte[10024];
+            do {
+                readLength = dataInputStream.read(buffer);
+                if (readLength >= 0) {
+                    outputStream.write(buffer, 0, readLength + 1);
+                    ReadOnlyDataResponse.printTel(buffer);
+                }
+            } while (readLength >= 10024);
+
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            //e.printStackTrace();// hinzugefügt von Philip Weis
+            throw new SipCommunicationException("Cannot read from Socket", e);
+        }
+    }
+
+    private void waitOnData() throws IOException {
+        while(dataInputStream.available() == 0) {
+            System.out.println("keine Daten");
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private boolean isOnlyDataResponse(Request request) {
+        // TODO Auto-generated method stub
+        return request.getMessageType() == 71;
+    }
+
+    /**
 	 * Returns an instantiated object of specified response class with the data of
 	 * the raw response. In addition to that this method checks if the data is valid
 	 * and matches the request.
@@ -240,7 +335,8 @@ public class TCPConnection implements SipConnection {
 	 *             in case the sercos device does not support the requested message
 	 *             type
 	 */
-	private Response getResponse(byte[] rawResponse, Request request, Class responseClass)
+	@SuppressWarnings("rawtypes")
+    private Response getResponse(byte[] rawResponse, Request request, Class responseClass)
 			throws SipProtocolException, SipServiceNotSupportedException {
 		try {
 
@@ -253,7 +349,7 @@ public class TCPConnection implements SipConnection {
 								+ " doesn't match the request transaction ID " + request.getTransactionId());
 
 			// Check if Drive threw an communication exception
-			if (header.getMessageType() == 67) {
+			if (header.getMessageType() == Head.MSG_EXCEPTION) {
 				ExceptionResponse exceptionResponse = new ExceptionResponse(rawResponse);
 				if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)					 
 					throw new SipProtocolException("Drive threw Communication Exception."
@@ -282,6 +378,43 @@ public class TCPConnection implements SipConnection {
 		}
 	}
 
+	   /**
+     * Reads the data from the open Socket
+     *
+     * @return the raw data of the socket as byte array
+     * @throws SipCommunicationException
+     *             in case of any problem occurs during socket communication
+     */
+    private byte[] getRawResponseFromSocketNew() throws SipCommunicationException {
+        System.out.println("getRawResponseFromSocketNew>");
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[10024];
+            int readLength;
+            while(dataInputStream.available() == 0) {
+                System.out.println("getRawResponseFromSocketNew> keine Daten");
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            while(dataInputStream.available() > 0) {
+                readLength = dataInputStream.read(buffer);
+                if (readLength >= 0) {
+                    outputStream.write(buffer, 0, readLength+1);
+                    ReadOnlyDataResponse.printTel(buffer);
+                }
+                
+            }
+
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            //e.printStackTrace();// hinzugefügt von Philip Weis
+            throw new SipCommunicationException("Cannot read from Socket", e);
+        }
+    }
+	
 	/**
 	 * Reads the data from the open Socket
 	 *

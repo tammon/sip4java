@@ -95,4 +95,9 @@ public class ReadOnlyDataResponse extends AbstractPacket implements Response {
         }
         System.out.println(b.toString());
     }
+
+    public static int getFixLength() {
+        //     sizeof(attribute) + sizefo(data length)
+        return (Integer.SIZE + Integer.SIZE)/8;
+    }
 }
