@@ -280,17 +280,22 @@ public class TCPConnection implements SipConnection {
             
             byte [] rawReadOnlyData = new byte[ReadOnlyDataResponse.getFixLength()];
             readLength = dataInputStream.read(rawReadOnlyData, 0, ReadOnlyDataResponse.getFixLength());
+            outputStream.write(rawReadOnlyData, 0, readLength);
             
-            
-            byte[] buffer = new byte[10024];
-            do {
+            int datalen = ReadOnlyDataResponse.getLengthOfData(rawReadOnlyData);
+            int revBytes = 0;
+            byte[] buffer = new byte[1024];
+            while (datalen > revBytes) {
                 readLength = dataInputStream.read(buffer);
                 if (readLength >= 0) {
-                    outputStream.write(buffer, 0, readLength + 1);
+                    outputStream.write(buffer, 0, readLength);
                     ReadOnlyDataResponse.printTel(buffer);
+                    revBytes += readLength; 
                 }
-            } while (readLength >= 10024);
-
+            }
+            //array checks on arr.length-1
+            byte [] dummy = {0};
+            outputStream.write(dummy, 0, dummy.length);
             return outputStream.toByteArray();
         } catch (IOException e) {
             //e.printStackTrace();// hinzugefügt von Philip Weis
@@ -378,43 +383,6 @@ public class TCPConnection implements SipConnection {
 		}
 	}
 
-	   /**
-     * Reads the data from the open Socket
-     *
-     * @return the raw data of the socket as byte array
-     * @throws SipCommunicationException
-     *             in case of any problem occurs during socket communication
-     */
-    private byte[] getRawResponseFromSocketNew() throws SipCommunicationException {
-        System.out.println("getRawResponseFromSocketNew>");
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[10024];
-            int readLength;
-            while(dataInputStream.available() == 0) {
-                System.out.println("getRawResponseFromSocketNew> keine Daten");
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-            while(dataInputStream.available() > 0) {
-                readLength = dataInputStream.read(buffer);
-                if (readLength >= 0) {
-                    outputStream.write(buffer, 0, readLength+1);
-                    ReadOnlyDataResponse.printTel(buffer);
-                }
-                
-            }
-
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            //e.printStackTrace();// hinzugefügt von Philip Weis
-            throw new SipCommunicationException("Cannot read from Socket", e);
-        }
-    }
-	
 	/**
 	 * Reads the data from the open Socket
 	 *

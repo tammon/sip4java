@@ -100,4 +100,11 @@ public class ReadOnlyDataResponse extends AbstractPacket implements Response {
         //     sizeof(attribute) + sizefo(data length)
         return (Integer.SIZE + Integer.SIZE)/8;
     }
+
+    public static int getLengthOfData(byte[] rawReadOnlyData) throws IOException {
+        DataInput data = DataStreamFactory.getLittleEndianDataInputStream(rawReadOnlyData);
+        int lengthOfData = data.readInt(); //attribute
+        lengthOfData = data.readInt();     //length 
+        return lengthOfData;
+    }
 }
