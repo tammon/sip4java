@@ -390,7 +390,7 @@ public class TCPConnection implements SipConnection {
     }
 
     private boolean isOnlyDataResponse(Request request) {
-        return request.getMessageType() == 71;
+        return request.getMessageType() == ReadOnlyData.MSG_READ_ONLY_DATA;
     }
 
     /**

@@ -27,13 +27,13 @@ package net.tammon.sip.packets;
 
 public class ReadOnlyData extends AbstractPacket implements Request {
 
-    private static final int messageType = 71;
+    public static final int MSG_READ_ONLY_DATA = 71;
     private final short slaveIndex;
     private final short slaveExtension;
     private final Idn idn;
 
     public ReadOnlyData(int transactionId, short slaveIndex, short slaveExtension, String idn) throws IllegalArgumentException {
-        this.head = new Head(transactionId, messageType);
+        this.head = new Head(transactionId, MSG_READ_ONLY_DATA);
         this.slaveIndex = slaveIndex;
         this.slaveExtension = slaveExtension;
         this.idn = new Idn(idn);
@@ -49,6 +49,6 @@ public class ReadOnlyData extends AbstractPacket implements Request {
 
     @Override
     public int getMessageType() {
-        return messageType;
+        return MSG_READ_ONLY_DATA;
     }
 }

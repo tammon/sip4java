@@ -36,7 +36,7 @@ import java.util.Arrays;
 
 public class ReadOnlyDataResponse extends AbstractPacket implements Response {
 
-    private final static int messageType = 72;
+    private final static int messageType = ReadOnlyData.MSG_READ_ONLY_DATA+1;
     private Data data;
 
     /**
