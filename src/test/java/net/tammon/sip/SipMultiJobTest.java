@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Properties;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 
@@ -58,7 +58,7 @@ class SipMultiJobTest {
         }
     }
 
-    @Ignore
+    @Disabled    
     // @Test
     void testIdnError() {
         Properties props = new Properties();
