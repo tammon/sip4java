@@ -46,11 +46,11 @@ import org.slf4j.LoggerFactory;
  * The TCPConnection class implements the SipConnection Interface and creates a sip connection via the TCP/IP protocol
  */
 public class TCPConnection implements SipConnection {
-    
+
     private static Logger _logger = LoggerFactory.getLogger("net.tammon.sip");
 
     private InetAddress ipAddress;
-    private int maxDelay, leaseTimeout, busyTimeout, sipPort, sipVersion;
+    private int leaseTimeout, busyTimeout, sipPort, sipVersion;
     private int transactionId = 0;
     private boolean connected = false;
     private List<Integer> supportedMessages;
@@ -80,7 +80,6 @@ public class TCPConnection implements SipConnection {
         this.sipPort = Integer.parseInt(properties.getProperty("sipPort"));
         this.leaseTimeout = Integer.parseInt(properties.getProperty("leaseTimeout"));
         this.busyTimeout = Integer.parseInt(properties.getProperty("busyTimeout"));
-        this.maxDelay = Integer.parseInt(properties.getProperty("maxDelay"));
         this.sipVersion = Integer.parseInt(properties.getProperty("sipVersion"));
 
         this.connectSocket();
@@ -214,17 +213,47 @@ public class TCPConnection implements SipConnection {
 
         sendDataToServer(request.getTcpMsgAsByteArray());
 
-        byte[] rawResponse;
-        if (isOnlyDataResponse(request)) {
-            rawResponse = getRawResponseFromSocket(request);
-        } else {
-            rawResponse = getRawResponseFromSocket();
+        while (true) {// busy handling
+            byte[] rawResponse;
+            if (isOnlyDataResponse(request)) {
+                rawResponse = getRawResponseFromSocket(request);
+            } else {
+                rawResponse = getRawResponseFromSocket();
+            }
+            Response ret = getResponse(printlnTel("<", rawResponse), request, response);
+            if (isBusy(ret)) {
+                busySleep();
+                continue;
+            }
+            return ret;
         }
-        return getResponse(printlnTel(rawResponse), request, response);
     }
 
+    /**
+     * Busy sleep.
+     *
+     * @throws SipCommunicationException the sip communication exception
+     */
+    private void busySleep() throws SipCommunicationException {
+        try {
+            _logger.info("busy");
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            throw new SipCommunicationException(e);
+        }
+    }
+
+    /**
+     * Gets the raw response from socket.
+     *
+     * @param request the request
+     * @return the raw response from socket
+     * @throws SipCommunicationException the sip communication exception
+     * @throws SipProtocolException the sip protocol exception
+     * @throws SipServiceSpecificExceptiion the sip service specific exceptiion
+     */
     private byte[] getRawResponseFromSocket(Request request)
-            throws SipCommunicationException, SipProtocolException {
+            throws SipCommunicationException, SipProtocolException, SipServiceSpecificExceptiion {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
             waitOnData();
@@ -254,17 +283,14 @@ public class TCPConnection implements SipConnection {
 
             int datalen = ReadOnlyDataResponse.getLengthOfData(rawReadOnlyData);
             int revBytes = 0;
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[datalen];
             while (datalen > revBytes) {
-                readLength = dataInputStream.read(buffer);
+                readLength = dataInputStream.read(buffer, 0, datalen);
                 if (readLength >= 0) {
                     outputStream.write(buffer, 0, readLength);
                     revBytes += readLength;
                 }
             }
-            // array checks on arr.length-1
-            byte[] dummy = { 0 };
-            outputStream.write(dummy, 0, dummy.length);
             return outputStream.toByteArray();
         } catch (IOException e) {
             // e.printStackTrace();// hinzugefügt von Philip Weis
@@ -280,20 +306,20 @@ public class TCPConnection implements SipConnection {
      *             in case of any problem occurs during socket communication
      */
     private byte[] getRawResponseFromSocket() throws SipCommunicationException {
-    
+
         waitOnData();
-    
+
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[10024];
+            byte[] buffer = new byte[1024];
             int readLength;
             do {
                 readLength = dataInputStream.read(buffer);
                 if (readLength >= 0) {
-                    outputStream.write(buffer, 0, readLength + 1);
+                    outputStream.write(buffer, 0, readLength);
                 }
             }
-            while (readLength >= 10024);
-    
+            while (readLength >= 1024);
+
             return outputStream.toByteArray();
         } catch (IOException e) {
             // e.printStackTrace();// hinzugefügt von Philip Weis
@@ -320,26 +346,28 @@ public class TCPConnection implements SipConnection {
      */
     @SuppressWarnings("rawtypes")
     private Response getResponse(byte[] rawResponse, Request request, Class responseClass)
-            throws SipProtocolException, SipServiceNotSupportedException {
+            throws SipProtocolException, SipServiceNotSupportedException, SipServiceSpecificExceptiion {
         try {
-    
+
             Head header = new Head(rawResponse);
-    
+
             // Check if we got the right response to our request
             if (header.getTransactionId() != request.getTransactionId())
                 throw new SipProtocolException(
                         "The response transaction ID " + header.getTransactionId()
                                 + " doesn't match the request transaction ID " + request.getTransactionId());
-    
+
             // Check if Drive threw an communication exception
             if (header.getMessageType() == Head.MSG_EXCEPTION) {
                 createSipException(rawResponse);
             }
-    
+
+            if (header.getMessageType() == BusyResponse.MSG_BUSY) {
+                return createSipBusy(rawResponse);
+            }
+
             Response response = (Response) responseClass.newInstance();
-    
-            // TODO busy response einfügen
-    
+
             if (header.getMessageType() == response.getMessageType())
                 response.setData(rawResponse);
             else
@@ -353,32 +381,80 @@ public class TCPConnection implements SipConnection {
         }
     }
 
+    /**
+     * Creates the sip busy.
+     *
+     * @param rawResponse the raw response
+     * @return the response
+     */
+    private Response createSipBusy(byte[] rawResponse) {
+        BusyResponse busyResponse = new BusyResponse();
+        return busyResponse;
+    }
+
+    /**
+     * Check and create sip exception.
+     *
+     * @param outputStream the output stream
+     * @param header the header
+     * @throws SipServiceSpecificExceptiion the sip service specific exceptiion
+     * @throws SipProtocolException the sip protocol exception
+     */
     private void checkAndCreateSipException(ByteArrayOutputStream outputStream, Head header)
-            throws IOException, SipProtocolException {
+            throws SipServiceSpecificExceptiion, SipProtocolException {
         int readLength;
         // Check if Drive threw an communication exception
         if (header.getMessageType() == Head.MSG_EXCEPTION) {
-            byte [] rawException = new byte[1024];
-            readLength = dataInputStream.read(rawException);
-            outputStream.write(rawException, 0, readLength+1);
+            byte[] rawException = new byte[ExceptionResponse.getFixLength()];
+            try {
+                readLength = dataInputStream.read(rawException);
+            } catch (IOException e) {
+                throw new SipProtocolException(e);
+            }
+            outputStream.write(rawException, 0, readLength);
             createSipException(outputStream.toByteArray());
         }
     }
 
-    private void createSipException(byte [] excption) throws IOException, SipProtocolException {
-        ExceptionResponse exceptionResponse = new ExceptionResponse(excption);
+    /**
+     * Creates the sip exception.
+     *
+     * @param excption the excption
+     * @throws SipServiceSpecificExceptiion the sip service specific exceptiion
+     * @throws SipProtocolException the sip protocol exception
+     */
+    private void createSipException(byte[] excption) throws SipServiceSpecificExceptiion, SipProtocolException {
+        ExceptionResponse exceptionResponse;
+        try {
+            exceptionResponse = new ExceptionResponse(excption);
+        } catch (IOException e) {
+            throw new SipProtocolException(e);
+        }
+
         if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
-            throw new SipProtocolException("Drive threw Communication Exception."
-                    + ((exceptionResponse.getCommonErrorCode() == CommonErrorCodes.SERVICESPECIFIC)
-                            ? (" SIP-SpecificErrorCode: " + exceptionResponse.getSpecificErrorCode())
-                            : (" SIP-CommonErrorCode: " + exceptionResponse.getCommonErrorCode())));
+            throw new SipServiceSpecificExceptiion("Drive threw Communication Exception. SIP-SpecificErrorCode: "
+                    + exceptionResponse.getSpecificErrorCode());
 
         if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.UNKNOWN_MESSAGE_TYPE)
             throw new SipProtocolException("Service not supported.");
+
+        if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.CONNECTION_ERROR)
+            throw new SipProtocolException("connection can not be established");
+
+        if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.TIMEOUT)
+            throw new SipProtocolException("connection lost or timeout");
+
+        if (exceptionResponse.getCommonErrorCode() == CommonErrorCodes.PDU_TOO_LARGE)
+            throw new SipProtocolException("limitation of PDU size");
+
+        throw new SipProtocolException("malformed PDU");
     }
 
+    /**
+     * Wait on data.
+     */
     private void waitOnData() {
-        int repeat = 100; //max. wait 1 Sec.
+        int repeat = 100; // max. wait 1 Sec.
         try {
             while (dataInputStream.available() == 0 && repeat > 0) {
                 _logger.info("wait: no values");
@@ -392,6 +468,12 @@ public class TCPConnection implements SipConnection {
         }
     }
 
+    /**
+     * Checks if is only data response.
+     *
+     * @param request the request
+     * @return true, if is only data response
+     */
     private boolean isOnlyDataResponse(Request request) {
         return request.getMessageType() == ReadOnlyData.MSG_READ_ONLY_DATA;
     }
@@ -586,31 +668,141 @@ public class TCPConnection implements SipConnection {
             e.printStackTrace();
         }
     }
-    
-    private static byte [] printlnTel(byte[] rawData) {
-        printTelegram(rawData);
+
+    /* (non-Javadoc)
+     * @see net.tammon.sip.SipConnection#readDatas(net.tammon.sip.SipJob[])
+     */
+    @Override
+    public SipJobState[] readDatas(SipJob[] requests) throws Exception {
+        if (requests == null) {
+            throw new IllegalArgumentException();
+        }
+        SipJobStateObject[] states = new SipJobStateObject[requests.length];
+        ReadOnlyData[] readOnlyDatas = new ReadOnlyData[requests.length];
+
+        try (ByteArrayOutputStream requestStream = new ByteArrayOutputStream()) {
+            for (int i = 0; i < requests.length; i++) {
+                SipJob request = requests[i];
+                if (request == null) {
+                    throw new IllegalArgumentException();
+                }
+                
+                SipJobStateObject stateObject = new SipJobStateObject();
+                stateObject.setRequest(request);
+                states[i] = stateObject;
+
+                ReadOnlyData readOnlyData = new ReadOnlyData(this.getNewTransactionId(),
+                        (short) request.getSlaveIndex(),
+                        (short) request.getSlaveExtension(),
+                        request.getIdn());
+                requestStream.write(readOnlyData.getTcpMsgAsByteArray());
+                readOnlyDatas[i] = readOnlyData;
+            }
+
+            sendDataToServer(printlnTel(">", requestStream.toByteArray()));
+
+            return respondsToReadOnlyDatas(states, readOnlyDatas);
+        } catch (IOException e) {
+            setExceptionToAllRequestes(e, states);
+            throw new SipCommunicationException(e);
+        }
+    }
+
+    /**
+     * Sets the exception to all requestes.
+     *
+     * @param e the e
+     * @param states the states
+     */
+    private void setExceptionToAllRequestes(Exception e, SipJobStateObject[] states) {
+        for (SipJobStateObject state : states) {
+            state.setException(e);
+        }
+    }
+
+    /**
+     * Responds to read only datas.
+     *
+     * @param states the states
+     * @param readOnlyDatas the read only datas
+     * @return the sip job state[]
+     * @throws SipCommunicationException the sip communication exception
+     * @throws SipProtocolException the sip protocol exception
+     * @throws SipServiceNotSupportedException the sip service not supported exception
+     */
+    private SipJobState[] respondsToReadOnlyDatas(SipJobStateObject[] states, ReadOnlyData[] readOnlyDatas) throws SipCommunicationException, SipProtocolException, SipServiceNotSupportedException
+             {
+        for (int i = 0; i < readOnlyDatas.length; i++) {
+            Request request = readOnlyDatas[i];
+            SipJobStateObject state = states[i];
+            Response response;
+
+            try {
+                byte[] rawData;
+                rawData = getRawResponseFromSocket(request);
+
+                response = getResponse(printlnTel("<", rawData), request, ReadOnlyDataResponse.class);
+                if (isBusy(response)) {
+                    busySleep();
+                    i--; // back to old request.
+                    continue;
+                }
+            } catch (SipServiceSpecificExceptiion e) {
+                states[i].setException(e);
+                continue;
+            }
+            Data data = ((ReadOnlyDataResponse) response).getData();
+            state.setData(data);
+            state.setException(null);
+        }
+        return states;
+    }
+
+    /**
+     * Checks if is busy.
+     *
+     * @param response the response
+     * @return true, if is busy
+     */
+    private boolean isBusy(Response response) {
+        return response.getClass() == BusyResponse.class;
+    }
+
+    private static byte[] printlnTel(String pre, byte[] rawData) {
+        printTelegram(pre, rawData);
         return rawData;
     }
-    
-    public static void printTelegram(byte[] rawData) {
+
+    public static void printTelegram(String pre, byte[] rawData) {
         if (null == rawData) {
             return;
         }
-        if (!_logger.isInfoEnabled()) {
+        if (!_logger.isInfoEnabled() && !_logger.isDebugEnabled()) {
             return;
         }
+        if (_logger.isErrorEnabled()) {
+            int max = rawData.length > 256 ? 256 : rawData.length;
+            StringBuilder b = createTelegram(pre, rawData, max);
+            _logger.info(b.toString());
+        }
+        if (_logger.isDebugEnabled()) {
+            StringBuilder b = createTelegram(pre, rawData, rawData.length);
+            _logger.debug(b.toString());
+        }
+    }
+
+    private static StringBuilder createTelegram(String pre, byte[] rawData, int max) {
         StringBuilder b = new StringBuilder();
-        b.append("data-len: ");
+        b.append(pre);
+        b.append(" data-len: ");
         b.append(rawData.length);
         b.append(System.lineSeparator());
-        int max = rawData.length > 256 ? 256 : rawData.length-1;
-        for (int i=0; i<max; i++) {
-            b.append(String.format(" %02X", rawData[i]));
+        for (int i = 0; i < max; i++) {
             if (i > 15 && i % 16 == 0) {
                 b.append(System.lineSeparator());
             }
+            b.append(String.format(" %02X", rawData[i]));
         }
-        
-        _logger.info(b.toString());
+        return b;
     }
 }

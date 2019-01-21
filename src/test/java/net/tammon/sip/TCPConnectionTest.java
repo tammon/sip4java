@@ -7,7 +7,6 @@ import java.util.Properties;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import net.tammon.sip.exceptions.SipException;
 import net.tammon.sip.packets.Data;
 
 class TCPConnectionTest {
@@ -20,16 +19,16 @@ class TCPConnectionTest {
         props.setProperty("sipPort", "35021");
         props.setProperty("leaseTimeout", "20000");
         props.setProperty("busyTimeout", "10000");
-        props.setProperty("maxDelay", "500");
         props.setProperty("sipVersion", "1");
         props.put("keepAlive", false);
         
         try {
-            TCPConnection tcp = new TCPConnection(props);
+            SipConnection tcp = SipFactory.newInstance(props);
+            assertNotNull(tcp);
             Data data = tcp.readData(0, 0, "S-0-0000");
             assertNotNull(data);
             tcp.disconnect();
-        } catch (SipException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }    
@@ -43,18 +42,18 @@ class TCPConnectionTest {
         props.setProperty("sipPort", "35021");
         props.setProperty("leaseTimeout", "20000");
         props.setProperty("busyTimeout", "10000");
-        props.setProperty("maxDelay", "500");
         props.setProperty("sipVersion", "1");
         props.put("keepAlive", false);
         
         try {
-            TCPConnection tcp = new TCPConnection(props);
+            SipConnection tcp = SipFactory.newInstance(props);
+            assertNotNull(tcp);
             Data data = tcp.readData(0, 0, "S-0-0017");
             assertNotNull(data);
             data = tcp.readData(0, 0, "S-0-0000");
             assertNotNull(data);
             tcp.disconnect();
-        } catch (SipException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -26,6 +26,11 @@
 package net.tammon.sip.exceptions;
 
 public class SipException extends Exception {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 2977243809388556126L;
+
     public SipException() {
         super();
     }

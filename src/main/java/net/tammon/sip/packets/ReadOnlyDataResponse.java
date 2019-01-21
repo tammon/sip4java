@@ -85,7 +85,7 @@ public class ReadOnlyDataResponse extends AbstractPacket implements Response {
     public void setData(byte[] rawData) {
         try {
             this.head = new Head(rawData);
-            this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
+            this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length));
         } catch (IOException | TypeNotSupportedException e) {
             throw new SipInternalException("Cannot set data of received S/IP packets", e);
         }

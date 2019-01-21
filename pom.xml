@@ -23,7 +23,7 @@
 
 	<groupId>net.tammon</groupId>
 	<artifactId>sip</artifactId>
-	<version>0.4.3</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
