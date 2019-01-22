@@ -50,7 +50,7 @@ public class TCPConnection implements SipConnection {
     private static Logger _logger = LoggerFactory.getLogger("net.tammon.sip");
 
     private InetAddress ipAddress;
-    private int leaseTimeout, busyTimeout, sipPort, sipVersion;
+    private int leaseTimeout, busyTimeout, sipPort, sipVersion, latencyTime;
     private int transactionId = 0;
     private boolean connected = false;
     private List<Integer> supportedMessages;
@@ -77,10 +77,13 @@ public class TCPConnection implements SipConnection {
 
         }
 
-        this.sipPort = Integer.parseInt(properties.getProperty("sipPort"));
-        this.leaseTimeout = Integer.parseInt(properties.getProperty("leaseTimeout"));
-        this.busyTimeout = Integer.parseInt(properties.getProperty("busyTimeout"));
-        this.sipVersion = Integer.parseInt(properties.getProperty("sipVersion"));
+        this.sipPort = Integer.parseInt(properties.getProperty("sipPort", "35021"));
+        this.leaseTimeout = Integer.parseInt(properties.getProperty("leaseTimeout", "5000"));
+        this.busyTimeout = Integer.parseInt(properties.getProperty("busyTimeout", "2000"));
+        this.sipVersion = Integer.parseInt(properties.getProperty("sipVersion", "1"));
+        this.latencyTime = Integer.parseInt(properties.getProperty("latencytime", "500"));
+        
+        managedTimeoutValues();
 
         this.connectSocket();
         this.connectSip();
@@ -88,6 +91,23 @@ public class TCPConnection implements SipConnection {
         boolean keepAlive = (boolean) properties.get("keepAlive");
         if (keepAlive)
             this.restartKeepAliveTimer();
+    }
+
+    private void managedTimeoutValues() {
+        if (this.busyTimeout > this.leaseTimeout) {
+            throw new IllegalArgumentException("busyTimeout > leaseTimeout");
+        }
+        
+        if (this.busyTimeout > this.latencyTime) {
+            this.busyTimeout -= this.latencyTime;
+            this.leaseTimeout -= this.latencyTime;
+            return;
+        }
+        
+        if (this.busyTimeout > 500) {
+            this.busyTimeout -= 250;
+            this.leaseTimeout -= 250;
+        }
     }
 
     /**
@@ -165,8 +185,9 @@ public class TCPConnection implements SipConnection {
         this.transactionId = 0;
         this.socketConnection = new Socket();
         try {
-            this.socketConnection.connect(new InetSocketAddress(this.ipAddress, this.sipPort), busyTimeout);
-            this.socketConnection.setSoTimeout(busyTimeout);
+            this.socketConnection.connect(new InetSocketAddress(this.ipAddress, this.sipPort), this.leaseTimeout);
+            this.socketConnection.setSoTimeout(this.latencyTime);
+            
             this.dataOutputStream = new DataOutputStream(this.socketConnection.getOutputStream());
             this.dataInputStream = new DataInputStream(this.socketConnection.getInputStream());
             this.supportedMessages = null;
