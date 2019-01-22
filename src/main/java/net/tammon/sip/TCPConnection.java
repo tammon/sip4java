@@ -186,7 +186,7 @@ public class TCPConnection implements SipConnection {
         this.socketConnection = new Socket();
         try {
             this.socketConnection.connect(new InetSocketAddress(this.ipAddress, this.sipPort), this.leaseTimeout);
-            this.socketConnection.setSoTimeout(this.latencyTime);
+            this.socketConnection.setSoTimeout(this.leaseTimeout);
             
             this.dataOutputStream = new DataOutputStream(this.socketConnection.getOutputStream());
             this.dataInputStream = new DataInputStream(this.socketConnection.getInputStream());
@@ -478,8 +478,9 @@ public class TCPConnection implements SipConnection {
         int repeat = (this.busyTimeout / 10); 
         try {
             while (dataInputStream.available() == 0 && repeat > 0) {
-                if ((repeat % 50) == 0)
-                _logger.info("wait: no values: " + repeat);
+                if ((repeat % 50) == 0) {
+                    _logger.info("wait: no answer: " + repeat);
+                }
                 try {
                     Thread.sleep(10);
                     repeat--;
@@ -510,6 +511,7 @@ public class TCPConnection implements SipConnection {
      */
     private void sendDataToServer(byte[] data) throws SipCommunicationException {
         try {
+            printlnTel(">", data);
             this.dataOutputStream.write(data);
             this.dataOutputStream.flush();
         } catch (IOException e) {
@@ -721,7 +723,7 @@ public class TCPConnection implements SipConnection {
                 readOnlyDatas[i] = readOnlyData;
             }
 
-            sendDataToServer(printlnTel(">", requestStream.toByteArray()));
+            sendDataToServer(requestStream.toByteArray());
 
             return respondsToReadOnlyDatas(states, readOnlyDatas);
         } catch (IOException e) {
