@@ -26,6 +26,11 @@
 package net.tammon.sip.exceptions;
 
 public class SipServiceNotSupportedException extends SipException {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public SipServiceNotSupportedException(String message) {
         super(message);
     }

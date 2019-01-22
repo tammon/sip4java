@@ -29,7 +29,7 @@ import java.io.DataInput;
 import java.io.IOException;
 
 public final class Head {
-    private static int MSG_EXCEPTION = 67;
+    public static int MSG_EXCEPTION = 67;
     private int transactionId;
     private int messageType;
 
@@ -60,13 +60,16 @@ public final class Head {
         return messageType;
     }
 
-
-
     public void setMessageType(int messageType) {
         this.messageType = messageType;
     }
 
     public byte[] getDataAsByteArray (){
         return Data.getByteArray(this.transactionId, this.messageType);
+    }
+    
+    public static int getFixLength() {
+        //     sizeof(transaction id) + sizefo(messagetype)
+        return (Integer.SIZE + Integer.SIZE)/8;
     }
 }

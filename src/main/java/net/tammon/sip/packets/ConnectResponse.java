@@ -41,7 +41,7 @@ public class ConnectResponse extends AbstractPacket implements Response {
     public void setData(byte[] rawData) {
         try {
             this.head = new Head(rawData);
-            this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
+            this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length));
         } catch (IOException e) {
             throw new SipInternalException("Cannot set data of received S/IP packets", e);
         }
@@ -89,4 +89,9 @@ public class ConnectResponse extends AbstractPacket implements Response {
     public int[] getSupportedMessageTypes() {
         return supportedMessageTypes;
     }
+    
+    public static int getFixLength() {
+        //     sizeof(version (uint32)) + sizeof(busytimeout (uint32)) + sizeof(leaseTimeout (uint32)) + sizeof(nomessagetypes (uint32))
+        return (Integer.SIZE + Integer.SIZE + Integer.SIZE + Integer.SIZE)/8;
+    } 
 }

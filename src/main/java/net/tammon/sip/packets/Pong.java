@@ -30,7 +30,7 @@ import net.tammon.sip.exceptions.SipInternalException;
 import java.io.IOException;
 
 public class Pong extends AbstractPacket implements Response {
-    private final static int messageType = 66;
+    private final static int messageType = Ping.MSG_PING + 1;
 
     @Override
     public int getMessageType() {
@@ -45,4 +45,9 @@ public class Pong extends AbstractPacket implements Response {
             throw new SipInternalException("Cannot set data of received S/IP packets", e);
         }
     }
+    
+    public static int getFixLength() {
+        return 0;
+    }    
+    
 }

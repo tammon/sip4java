@@ -46,7 +46,7 @@ public class ExceptionResponse extends AbstractPacket implements Response {
     public void setData(byte[] rawData) {
         try {
             this.head = new Head(rawData);
-            this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length - 1));
+            this.setBodyData(Arrays.copyOfRange(rawData, this.head.getMsgLength(), rawData.length));
         } catch (IOException e) {
             throw new SipInternalException("Cannot set data of received S/IP packets", e);
         }
@@ -71,4 +71,9 @@ public class ExceptionResponse extends AbstractPacket implements Response {
     public int getSpecificErrorCode() {
         return specificErrorCode;
     }
+    
+    public static int getFixLength() {
+        //     sizeof(CommonErrorCode (uint16)) + sizeof(SpecificErrorCode (unint32))
+        return (Short.SIZE + Integer.SIZE)/8;
+    }    
 }

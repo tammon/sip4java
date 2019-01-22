@@ -30,10 +30,14 @@ import net.tammon.sip.packets.Data;
 import java.net.InetAddress;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Interface SipConnection.
+ */
 public interface SipConnection {
 
     /**
-     * Checks whether or not the TCP connection to the sercos slave is still connected
+     * Checks whether or not the TCP connection to the sercos slave is still connected.
      *
      * @return true if the connection is alive
      */
@@ -47,14 +51,14 @@ public interface SipConnection {
     InetAddress getIpAddress();
 
     /**
-     * Returns the used sercos device port of the current sip connection
+     * Returns the used sercos device port of the current sip connection.
      *
      * @return used sercos device port
      */
     int getSipPort();
 
     /**
-     * Returns the used version of the Sercos Internet Protocol
+     * Returns the used version of the Sercos Internet Protocol.
      *
      * @return version of Sercos Internet Protocol
      */
@@ -69,9 +73,29 @@ public interface SipConnection {
     List<Integer> getSupportedMessages();
 
     /**
-     * Stops the keep alive loop and closes the socket connection to the sercos device
+     * Stops the keep alive loop and closes the socket connection to the sercos device.
      */
     void disconnect();
 
+    /**
+     * Single Request
+     * Read data.
+     *
+     * @param slaveIndex the slave index
+     * @param slaveExtension the slave extension
+     * @param idn the idn
+     * @return the data
+     * @throws Exception the exception
+     */
     Data readData(int slaveIndex, int slaveExtension, String idn) throws Exception;
+    
+    /**
+     * Multiple Requests
+     * Read datas.
+     *
+     * @param jobs the jobs
+     * @return the sip job state[]
+     * @throws Exception the exception
+     */
+    SipJobState[] readDatas(SipJob [] jobs)  throws Exception;
 }

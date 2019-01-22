@@ -25,7 +25,12 @@
 
 package net.tammon.sip.exceptions;
 
-public class SipCommunicationException extends SipException {
+final public class SipCommunicationException extends SipException {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public SipCommunicationException() {
     }
 
