@@ -475,10 +475,11 @@ public class TCPConnection implements SipConnection {
      * Wait on data.
      */
     private void waitOnData() {
-        int repeat = 100; // max. wait 1 Sec.
+        int repeat = (this.busyTimeout / 10); 
         try {
             while (dataInputStream.available() == 0 && repeat > 0) {
-                _logger.info("wait: no values");
+                if ((repeat % 50) == 0)
+                _logger.info("wait: no values: " + repeat);
                 try {
                     Thread.sleep(10);
                     repeat--;
