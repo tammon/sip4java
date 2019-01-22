@@ -50,7 +50,8 @@ public class TCPConnection implements SipConnection {
     private static Logger _logger = LoggerFactory.getLogger("net.tammon.sip");
 
     private InetAddress ipAddress;
-    private int leaseTimeout, busyTimeout, sipPort, sipVersion, latencyTime;
+    private int leaseTimeout, busyTimeout, sipPort, sipVersion; 
+    private int latencyTime; //latency between server and client connection.
     private int transactionId = 0;
     private boolean connected = false;
     private List<Integer> supportedMessages;
@@ -314,7 +315,6 @@ public class TCPConnection implements SipConnection {
             }
             return outputStream.toByteArray();
         } catch (IOException e) {
-            // e.printStackTrace();// hinzugefügt von Philip Weis
             throw new SipCommunicationException("Cannot read from Socket", e);
         }
     }
@@ -343,7 +343,6 @@ public class TCPConnection implements SipConnection {
 
             return outputStream.toByteArray();
         } catch (IOException e) {
-            // e.printStackTrace();// hinzugefügt von Philip Weis
             throw new SipCommunicationException("Cannot read from Socket", e);
         }
     }
