@@ -3,11 +3,11 @@ package net.tammon.sip;
 /**
  * Helper Calls for SipJob
  */
-final public class SipJObject implements SipJob {
+final public class SipJobObject implements SipJob {
     
-    int _slaveIndex;
-    int _slaveExtension;
-    String _Idn;
+    final private int _slaveIndex;
+    final private int _slaveExtension;
+    final private String _Idn;
 
     /**
      * Instantiates a new sip J object.
@@ -16,7 +16,7 @@ final public class SipJObject implements SipJob {
      * @param slaveextension the slaveextension
      * @param idn the idn
      */
-    public SipJObject(int slaveindex, int slaveextension, String idn) {
+    public SipJobObject(int slaveindex, int slaveextension, String idn) {
         _slaveIndex =  slaveindex;
         _slaveExtension = slaveextension;
         _Idn = idn;

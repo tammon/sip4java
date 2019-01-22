@@ -24,7 +24,7 @@ class SipMultiJobTest {
             SipConnection tcp = SipFactory.newInstance(props);
             assertNotNull(tcp);
             SipJob[] requests = new SipJob[1];
-            requests[0] = new SipJObject(0, 0, "S-0-0000");
+            requests[0] = new SipJobObject(0, 0, "S-0-0000");
             SipJobState[] datas = tcp.readDatas(requests);
             assertNotNull(datas);
             tcp.disconnect();
@@ -47,9 +47,9 @@ class SipMultiJobTest {
             SipConnection tcp = SipFactory.newInstance(props);
             assertNotNull(tcp);
             SipJob[] requests = new SipJob[3];
-            requests[0] = new SipJObject(0, 0, "S-0-0000");
-            requests[1] = new SipJObject(0, 0, "S-0-0030");
-            requests[2] = new SipJObject(0, 0, "S-0-0026");
+            requests[0] = new SipJobObject(0, 0, "S-0-0000");
+            requests[1] = new SipJobObject(0, 0, "S-0-0030");
+            requests[2] = new SipJobObject(0, 0, "S-0-0026");
             SipJobState[] datas = tcp.readDatas(requests);
             assertNotNull(datas);
             tcp.disconnect();
@@ -73,7 +73,7 @@ class SipMultiJobTest {
             SipConnection tcp = SipFactory.newInstance(props);
             assertNotNull(tcp);
             SipJob[] requests = new SipJob[1];
-            requests[0] = new SipJObject(0, 0, "S-0-0001");
+            requests[0] = new SipJobObject(0, 0, "S-0-0001");
             SipJobState[] datas = tcp.readDatas(requests);
             assertNotNull(datas);
             tcp.disconnect();
@@ -97,7 +97,7 @@ class SipMultiJobTest {
             SipConnection tcp = SipFactory.newInstance(props);
             assertNotNull(tcp);
             SipJob[] requests = new SipJob[1];
-            requests[0] = new SipJObject(0, 0, "S-0-1111");
+            requests[0] = new SipJobObject(0, 0, "S-0-1111");
             SipJobState[] datas = tcp.readDatas(requests);
             assertNotNull(datas);
             assertNotNull(datas[0].getException());
